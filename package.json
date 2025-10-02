@@ -1,0 +1,36 @@
+{
+  "name": "flavorfind",
+  "version": "1.0.0",
+  "description": "FlavorFind - A modern Vue.js app for discovering, searching, and saving delicious recipes",
+  "main": "src/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --ext .vue,.js --fix"
+  },
+  "dependencies": {
+    "vue": "^3.3.4",
+    "vue-router": "^4.2.4",
+    "vuex": "^4.1.0",
+    "axios": "^1.4.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.2.3",
+    "vite": "^4.4.0",
+    "eslint": "^8.45.0",
+    "eslint-plugin-vue": "^9.15.1"
+  },
+  "keywords": [
+    "vue",
+    "vuejs",
+    "flavorfind",
+    "recipe",
+    "recipes",
+    "cooking",
+    "food",
+    "portfolio"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
