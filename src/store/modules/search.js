@@ -1,3 +1,6 @@
+import mealService from "@/services/mealService";
+import { transformMealsData } from "@/utils/mealTransform";
+
 const state = {
   searchQuery: "",
   searchResults: [],
@@ -8,6 +11,7 @@ const state = {
     maxCookTime: null,
   },
   isSearching: false,
+  error: null,
 };
 
 const mutations = {
@@ -35,6 +39,14 @@ const mutations = {
   SET_IS_SEARCHING(state, isSearching) {
     state.isSearching = isSearching;
   },
+
+  SET_ERROR(state, error) {
+    state.error = error;
+  },
+
+  CLEAR_ERROR(state) {
+    state.error = null;
+  },
 };
 
 const actions = {
@@ -44,34 +56,32 @@ const actions = {
 
   async performSearch({ commit, state, rootGetters }) {
     commit("SET_IS_SEARCHING", true);
+    commit("CLEAR_ERROR");
 
     try {
-      // Get all recipes from the recipes module
-      const allRecipes = rootGetters["recipes/allRecipes"];
+      let searchResults = [];
 
-      let filteredRecipes = allRecipes;
-
-      // Apply text search
+      // If there's a text search query, use API search
       if (state.searchQuery.trim()) {
-        const query = state.searchQuery.toLowerCase();
-        filteredRecipes = filteredRecipes.filter(
-          (recipe) =>
-            recipe.title.toLowerCase().includes(query) ||
-            recipe.description.toLowerCase().includes(query) ||
-            recipe.ingredients.some((ingredient) =>
-              ingredient.toLowerCase().includes(query)
-            )
-        );
+        const rawMeals = await mealService.searchMeals(state.searchQuery);
+        searchResults = transformMealsData(rawMeals);
+      } else {
+        // If no text query but filters are applied, get recipes by category/area
+        if (state.filters.cuisine) {
+          const rawMeals = await mealService.getMealsByArea(
+            state.filters.cuisine
+          );
+          searchResults = transformMealsData(rawMeals);
+        } else {
+          // No search query and no cuisine filter - get cached recipes from store
+          searchResults = rootGetters["recipes/allRecipes"];
+        }
       }
 
-      // Apply filters
-      if (state.filters.cuisine) {
-        filteredRecipes = filteredRecipes.filter(
-          (recipe) =>
-            recipe.cuisine.toLowerCase() === state.filters.cuisine.toLowerCase()
-        );
-      }
+      // Apply local filters to the API results
+      let filteredRecipes = searchResults;
 
+      // Apply dietary filter (this needs to be done locally as API doesn't support it)
       if (state.filters.dietary) {
         filteredRecipes = filteredRecipes.filter((recipe) =>
           recipe.dietary.some(
@@ -80,6 +90,7 @@ const actions = {
         );
       }
 
+      // Apply difficulty filter
       if (state.filters.difficulty) {
         filteredRecipes = filteredRecipes.filter(
           (recipe) =>
@@ -88,19 +99,58 @@ const actions = {
         );
       }
 
+      // Apply max cook time filter
       if (state.filters.maxCookTime) {
         filteredRecipes = filteredRecipes.filter(
           (recipe) => recipe.cookTime <= state.filters.maxCookTime
         );
       }
 
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
       commit("SET_SEARCH_RESULTS", filteredRecipes);
     } catch (error) {
       console.error("Search error:", error);
+      commit("SET_ERROR", "Failed to search recipes. Please try again.");
       commit("SET_SEARCH_RESULTS", []);
+    } finally {
+      commit("SET_IS_SEARCHING", false);
+    }
+  },
+
+  async searchByCategory({ commit }, category) {
+    commit("SET_IS_SEARCHING", true);
+    commit("CLEAR_ERROR");
+
+    try {
+      const rawMeals = await mealService.getMealsByCategory(category);
+      const transformedRecipes = transformMealsData(rawMeals);
+      commit("SET_SEARCH_RESULTS", transformedRecipes);
+      commit("SET_FILTER", { filterType: "cuisine", value: "" }); // Clear cuisine filter
+      return transformedRecipes;
+    } catch (error) {
+      console.error("Category search error:", error);
+      commit("SET_ERROR", "Failed to search by category.");
+      commit("SET_SEARCH_RESULTS", []);
+      return [];
+    } finally {
+      commit("SET_IS_SEARCHING", false);
+    }
+  },
+
+  async searchByCuisine({ commit }, cuisine) {
+    commit("SET_IS_SEARCHING", true);
+    commit("CLEAR_ERROR");
+
+    try {
+      const rawMeals = await mealService.getMealsByArea(cuisine);
+      const transformedRecipes = transformMealsData(rawMeals);
+      commit("SET_SEARCH_RESULTS", transformedRecipes);
+      commit("SET_FILTER", { filterType: "cuisine", value: cuisine });
+      return transformedRecipes;
+    } catch (error) {
+      console.error("Cuisine search error:", error);
+      commit("SET_ERROR", "Failed to search by cuisine.");
+      commit("SET_SEARCH_RESULTS", []);
+      return [];
     } finally {
       commit("SET_IS_SEARCHING", false);
     }
@@ -119,6 +169,11 @@ const actions = {
   clearSearch({ commit }) {
     commit("SET_SEARCH_QUERY", "");
     commit("SET_SEARCH_RESULTS", []);
+    commit("CLEAR_ERROR");
+  },
+
+  clearError({ commit }) {
+    commit("CLEAR_ERROR");
   },
 };
 
@@ -127,6 +182,7 @@ const getters = {
   searchResults: (state) => state.searchResults,
   filters: (state) => state.filters,
   isSearching: (state) => state.isSearching,
+  error: (state) => state.error,
   hasActiveFilters: (state) => {
     return Object.values(state.filters).some(
       (value) => value !== "" && value !== null

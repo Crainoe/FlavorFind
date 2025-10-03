@@ -1,171 +1,217 @@
-// Sample recipes data - replace with API integration later
-const sampleRecipes = [
-  {
-    id: 1,
-    title: "Classic Margherita Pizza",
-    description:
-      "A traditional Italian pizza with fresh tomatoes, mozzarella, and basil",
-    image: "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=400",
-    cookTime: 25,
-    servings: 4,
-    difficulty: "Medium",
-    cuisine: "Italian",
-    dietary: ["Vegetarian"],
-    ingredients: [
-      "Pizza dough",
-      "Tomato sauce",
-      "Fresh mozzarella",
-      "Fresh basil leaves",
-      "Olive oil",
-      "Salt",
-    ],
-    instructions: [
-      "Preheat oven to 475°F",
-      "Roll out pizza dough",
-      "Spread tomato sauce evenly",
-      "Add mozzarella cheese",
-      "Bake for 12-15 minutes",
-      "Add fresh basil and serve",
-    ],
-  },
-  {
-    id: 2,
-    title: "Chicken Teriyaki Bowl",
-    description:
-      "Delicious Japanese-inspired chicken bowl with steamed vegetables",
-    image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400",
-    cookTime: 30,
-    servings: 2,
-    difficulty: "Easy",
-    cuisine: "Japanese",
-    dietary: ["Gluten-Free"],
-    ingredients: [
-      "Chicken breast",
-      "Teriyaki sauce",
-      "White rice",
-      "Broccoli",
-      "Carrots",
-      "Sesame seeds",
-    ],
-    instructions: [
-      "Cook rice according to package directions",
-      "Cut chicken into strips",
-      "Cook chicken in teriyaki sauce",
-      "Steam vegetables",
-      "Serve over rice with sesame seeds",
-    ],
-  },
-  {
-    id: 3,
-    title: "Mediterranean Quinoa Salad",
-    description: "Fresh and healthy quinoa salad with Mediterranean flavors",
-    image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400",
-    cookTime: 20,
-    servings: 4,
-    difficulty: "Easy",
-    cuisine: "Mediterranean",
-    dietary: ["Vegetarian", "Vegan", "Gluten-Free"],
-    ingredients: [
-      "Quinoa",
-      "Cherry tomatoes",
-      "Cucumber",
-      "Red onion",
-      "Feta cheese",
-      "Olive oil",
-      "Lemon juice",
-      "Fresh herbs",
-    ],
-    instructions: [
-      "Cook quinoa and let cool",
-      "Dice vegetables",
-      "Mix quinoa with vegetables",
-      "Add feta and herbs",
-      "Dress with olive oil and lemon",
-      "Season and serve",
-    ],
-  },
-];
+import mealService from "@/services/mealService";
+import { transformMealsData } from "@/utils/mealTransform";
 
 const state = {
-  allRecipes: sampleRecipes,
+  allRecipes: [],
   currentRecipe: null,
-  loading: false,
+  isLoading: false,
   error: null,
+  lastUpdated: null,
+  categories: [],
+  areas: [],
 };
 
 const mutations = {
-  SET_RECIPES(state, recipes) {
-    state.allRecipes = recipes;
-  },
-  SET_CURRENT_RECIPE(state, recipe) {
-    state.currentRecipe = recipe;
-  },
   SET_LOADING(state, loading) {
-    state.loading = loading;
+    state.isLoading = loading;
   },
+
   SET_ERROR(state, error) {
     state.error = error;
   },
-  ADD_RECIPE(state, recipe) {
-    state.allRecipes.push({
-      ...recipe,
-      id: Math.max(...state.allRecipes.map((r) => r.id)) + 1,
-    });
+
+  SET_RECIPES(state, recipes) {
+    state.allRecipes = recipes;
+    state.lastUpdated = new Date().toISOString();
+  },
+
+  SET_CURRENT_RECIPE(state, recipe) {
+    state.currentRecipe = recipe;
+  },
+
+  CLEAR_CURRENT_RECIPE(state) {
+    state.currentRecipe = null;
+  },
+
+  ADD_RECIPES(state, recipes) {
+    const existingIds = new Set(state.allRecipes.map((r) => r.id));
+    const newRecipes = recipes.filter((r) => !existingIds.has(r.id));
+    state.allRecipes.push(...newRecipes);
+    state.lastUpdated = new Date().toISOString();
+  },
+
+  SET_CATEGORIES(state, categories) {
+    state.categories = categories;
+  },
+
+  SET_AREAS(state, areas) {
+    state.areas = areas;
+  },
+
+  CLEAR_ERROR(state) {
+    state.error = null;
   },
 };
 
 const actions = {
-  async fetchRecipes({ commit }) {
+  async fetchRecipes({ commit, state }) {
+    if (state.allRecipes.length > 0 && state.lastUpdated) {
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      const lastUpdate = new Date(state.lastUpdated);
+      if (lastUpdate > oneHourAgo) {
+        return state.allRecipes;
+      }
+    }
+
     commit("SET_LOADING", true);
+    commit("CLEAR_ERROR");
+
     try {
-      // TODO: Replace with actual API call
-      // For now, use sample data
-      await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate API delay
-      commit("SET_RECIPES", sampleRecipes);
-      commit("SET_ERROR", null);
+      const rawMeals = await mealService.getRandomMeals(12);
+      const transformedRecipes = transformMealsData(rawMeals);
+
+      commit("SET_RECIPES", transformedRecipes);
+      return transformedRecipes;
     } catch (error) {
-      commit("SET_ERROR", error.message);
+      console.error("Error fetching recipes:", error);
+      commit("SET_ERROR", "Failed to load recipes. Please try again later.");
+      return [];
     } finally {
       commit("SET_LOADING", false);
     }
   },
 
-  async fetchRecipeById({ commit, state }, id) {
+  async fetchMoreRecipes({ commit }, count = 6) {
     commit("SET_LOADING", true);
+    commit("CLEAR_ERROR");
+
     try {
-      // TODO: Replace with actual API call
-      const recipe = state.allRecipes.find((r) => r.id === parseInt(id));
-      if (recipe) {
-        commit("SET_CURRENT_RECIPE", recipe);
-        commit("SET_ERROR", null);
-      } else {
-        throw new Error("Recipe not found");
-      }
+      const rawMeals = await mealService.getRandomMeals(count);
+      const transformedRecipes = transformMealsData(rawMeals);
+
+      commit("ADD_RECIPES", transformedRecipes);
+      return transformedRecipes;
     } catch (error) {
-      commit("SET_ERROR", error.message);
+      console.error("Error fetching more recipes:", error);
+      commit("SET_ERROR", "Failed to load more recipes.");
+      return [];
     } finally {
       commit("SET_LOADING", false);
     }
+  },
+
+  async fetchRecipeById({ commit }, id) {
+    commit("SET_LOADING", true);
+    commit("CLEAR_ERROR");
+
+    try {
+      const rawMeal = await mealService.getMealById(id);
+      if (rawMeal) {
+        const transformedRecipe = transformMealsData([rawMeal])[0];
+        commit("SET_CURRENT_RECIPE", transformedRecipe);
+        return transformedRecipe;
+      } else {
+        commit("SET_ERROR", "Recipe not found.");
+        return null;
+      }
+    } catch (error) {
+      console.error("Error fetching recipe by ID:", error);
+      commit("SET_ERROR", "Failed to load recipe details.");
+      return null;
+    } finally {
+      commit("SET_LOADING", false);
+    }
+  },
+
+  async fetchRecipesByCategory({ commit }, category) {
+    commit("SET_LOADING", true);
+    commit("CLEAR_ERROR");
+
+    try {
+      const rawMeals = await mealService.getMealsByCategory(category);
+      const transformedRecipes = transformMealsData(rawMeals);
+      return transformedRecipes;
+    } catch (error) {
+      console.error("Error fetching recipes by category:", error);
+      commit("SET_ERROR", "Failed to load recipes by category.");
+      return [];
+    } finally {
+      commit("SET_LOADING", false);
+    }
+  },
+
+  async fetchRecipesByArea({ commit }, area) {
+    commit("SET_LOADING", true);
+    commit("CLEAR_ERROR");
+
+    try {
+      const rawMeals = await mealService.getMealsByArea(area);
+      const transformedRecipes = transformMealsData(rawMeals);
+      return transformedRecipes;
+    } catch (error) {
+      console.error("Error fetching recipes by area:", error);
+      commit("SET_ERROR", "Failed to load recipes by cuisine.");
+      return [];
+    } finally {
+      commit("SET_LOADING", false);
+    }
+  },
+
+  async fetchCategories({ commit }) {
+    try {
+      const categories = await mealService.getCategories();
+      commit("SET_CATEGORIES", categories);
+      return categories;
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      return [];
+    }
+  },
+
+  async fetchAreas({ commit }) {
+    try {
+      const areas = await mealService.getAreas();
+      commit("SET_AREAS", areas);
+      return areas;
+    } catch (error) {
+      console.error("Error fetching areas:", error);
+      return [];
+    }
+  },
+
+  clearError({ commit }) {
+    commit("CLEAR_ERROR");
   },
 
   clearCurrentRecipe({ commit }) {
-    commit("SET_CURRENT_RECIPE", null);
+    commit("CLEAR_CURRENT_RECIPE");
   },
 };
 
 const getters = {
   allRecipes: (state) => state.allRecipes,
   currentRecipe: (state) => state.currentRecipe,
-  isLoading: (state) => state.loading,
+  isLoading: (state) => state.isLoading,
   error: (state) => state.error,
-  recipesByDietary: (state) => (dietary) => {
-    return state.allRecipes.filter((recipe) =>
-      recipe.dietary.some((d) => d.toLowerCase() === dietary.toLowerCase())
+  lastUpdated: (state) => state.lastUpdated,
+  categories: (state) => state.categories,
+  areas: (state) => state.areas,
+
+  getRecipeById: (state) => (id) => {
+    return state.allRecipes.find(
+      (recipe) => recipe.id === id || recipe.id === parseInt(id)
     );
   },
-  recipesByCuisine: (state) => (cuisine) => {
+
+  getRecipesByCategory: (state) => (category) => {
     return state.allRecipes.filter(
-      (recipe) => recipe.cuisine.toLowerCase() === cuisine.toLowerCase()
+      (recipe) => recipe.category?.toLowerCase() === category.toLowerCase()
+    );
+  },
+
+  getRecipesByCuisine: (state) => (cuisine) => {
+    return state.allRecipes.filter(
+      (recipe) => recipe.cuisine?.toLowerCase() === cuisine.toLowerCase()
     );
   },
 };
