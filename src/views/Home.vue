@@ -261,7 +261,7 @@ export default {
 .quick-actions h2 {
   text-align: center;
   font-size: 2.5rem;
-  color: #2d3748;
+  color: var(--text-primary);
   margin-bottom: 40px;
 }
 
@@ -357,7 +357,7 @@ export default {
 }
 
 .stat-label {
-  color: var(--text-muted);
+  color: var(--text-secondary);
   font-weight: var(--font-weight-medium);
 }
 
