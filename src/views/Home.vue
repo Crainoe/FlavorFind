@@ -144,11 +144,11 @@ export default {
 
 /* Hero Section */
 .hero-section {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--primary-gradient);
   color: white;
   text-align: center;
   padding: 80px 20px;
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   margin-bottom: 60px;
 }
 
@@ -200,13 +200,13 @@ export default {
 
 .section-header h2 {
   font-size: 2.5rem;
-  color: #2d3748;
+  color: var(--text-primary);
   margin-bottom: 12px;
 }
 
 .section-header p {
   font-size: 1.1rem;
-  color: #718096;
+  color: var(--text-secondary);
 }
 
 .recipes-grid {
@@ -219,7 +219,7 @@ export default {
 .error-state {
   text-align: center;
   padding: 60px 20px;
-  color: #718096;
+  color: var(--text-secondary);
 }
 
 .loading-spinner {
@@ -238,19 +238,19 @@ export default {
 }
 
 .retry-btn {
-  background: #667eea;
+  background: var(--primary-color);
   color: white;
   border: none;
   padding: 12px 24px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   margin-top: 16px;
-  transition: background 0.3s ease;
+  transition: background var(--transition-normal);
 }
 
 .retry-btn:hover {
-  background: #5a67d8;
+  background: var(--primary-dark);
 }
 
 /* Quick Actions */
@@ -272,17 +272,18 @@ export default {
 }
 
 .action-card {
-  background: white;
+  background: var(--bg-primary);
   padding: 32px 24px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   text-align: center;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-normal);
+  border: 1px solid var(--border-light);
 }
 
 .action-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-lg);
 }
 
 .action-icon {
@@ -292,12 +293,12 @@ export default {
 
 .action-card h3 {
   font-size: 1.3rem;
-  color: #2d3748;
+  color: var(--text-primary);
   margin-bottom: 12px;
 }
 
 .action-card p {
-  color: #718096;
+  color: var(--text-secondary);
   margin-bottom: 24px;
   line-height: 1.6;
 }
@@ -306,13 +307,13 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--primary-gradient);
   color: white;
   padding: 12px 24px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   text-decoration: none;
-  font-weight: 500;
-  transition: all 0.3s ease;
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-normal);
 }
 
 .action-btn:hover {
@@ -330,10 +331,11 @@ export default {
 
 /* Stats Section */
 .stats-section {
-  background: white;
-  border-radius: 12px;
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
   padding: 40px 20px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-light);
 }
 
 .stats-grid {
@@ -349,14 +351,14 @@ export default {
 
 .stat-number {
   font-size: 2.5rem;
-  font-weight: 700;
-  color: #667eea;
+  font-weight: var(--font-weight-bold);
+  color: var(--primary-color);
   margin-bottom: 8px;
 }
 
 .stat-label {
-  color: #718096;
-  font-weight: 500;
+  color: var(--text-muted);
+  font-weight: var(--font-weight-medium);
 }
 
 /* Mobile Responsiveness */

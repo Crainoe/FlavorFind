@@ -180,11 +180,12 @@ export default {
 
 <style scoped>
 .filter-panel {
-  background: white;
-  border-radius: 12px;
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
   padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
   margin-bottom: 24px;
+  border: 1px solid var(--border-light);
 }
 
 .filter-header {
@@ -195,21 +196,21 @@ export default {
 }
 
 .filter-header h3 {
-  color: #2d3748;
+  color: var(--text-primary);
   font-size: 1.3rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .clear-filters-btn {
-  background: #e53e3e;
+  background: var(--danger-color);
   color: white;
   border: none;
   padding: 8px 16px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 0.9rem;
-  font-weight: 500;
-  transition: background 0.3s ease;
+  font-weight: var(--font-weight-medium);
+  transition: background var(--transition-normal);
 }
 
 .clear-filters-btn:hover {
@@ -230,37 +231,38 @@ export default {
 }
 
 .filter-group label {
-  font-weight: 500;
-  color: #4a5568;
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
   font-size: 0.95rem;
 }
 
 .filter-select {
   padding: 12px;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
-  background: white;
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
   font-size: 0.95rem;
-  transition: border-color 0.3s ease;
+  transition: border-color var(--transition-normal);
   cursor: pointer;
+  color: var(--text-primary);
 }
 
 .filter-select:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--primary-color);
 }
 
 .filter-select:hover {
-  border-color: #cbd5e0;
+  border-color: var(--border-default);
 }
 
 .active-filters {
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--border-light);
   padding-top: 20px;
 }
 
 .active-filters h4 {
-  color: #4a5568;
+  color: var(--text-secondary);
   font-size: 1rem;
   margin-bottom: 12px;
 }

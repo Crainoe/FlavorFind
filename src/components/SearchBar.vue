@@ -99,11 +99,12 @@ export default {
 .search-input-container {
   flex: 1;
   display: flex;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
   overflow: hidden;
-  transition: box-shadow 0.3s ease;
+  transition: box-shadow var(--transition-normal);
+  border: 1px solid var(--border-light);
 }
 
 .search-input-container:focus-within {
@@ -117,20 +118,21 @@ export default {
   outline: none;
   font-size: 1rem;
   background: transparent;
+  color: var(--text-primary);
 }
 
 .search-input::placeholder {
-  color: #a0aec0;
+  color: var(--text-muted);
 }
 
 .search-button {
   padding: 16px 20px;
   border: none;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--primary-gradient);
   color: white;
   cursor: pointer;
   font-size: 1.2rem;
-  transition: all 0.3s ease;
+  transition: all var(--transition-normal);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -138,7 +140,7 @@ export default {
 }
 
 .search-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+  background: var(--primary-dark);
   transform: translateY(-1px);
 }
 
@@ -162,19 +164,19 @@ export default {
 
 .clear-button {
   padding: 12px 20px;
-  border: 2px solid #e2e8f0;
-  background: white;
-  color: #718096;
-  border-radius: 8px;
+  border: 2px solid var(--border-default);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  font-weight: 500;
-  transition: all 0.3s ease;
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-normal);
 }
 
 .clear-button:hover {
-  border-color: #cbd5e0;
-  background: #f7fafc;
-  color: #4a5568;
+  border-color: var(--border-dark);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
 }
 
 @media (max-width: 768px) {

@@ -92,20 +92,21 @@ export default {
 
 <style scoped>
 .recipe-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: all var(--transition-normal);
   cursor: pointer;
   height: 100%;
   display: flex;
   flex-direction: column;
+  border: 1px solid var(--border-light);
 }
 
 .recipe-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-lg);
 }
 
 .recipe-image-container {
@@ -118,7 +119,7 @@ export default {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  transition: transform var(--transition-normal);
 }
 
 .recipe-card:hover .recipe-image {
@@ -129,8 +130,8 @@ export default {
   position: absolute;
   top: 12px;
   right: 12px;
-  background: rgba(255, 255, 255, 0.9);
-  border: none;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
   border-radius: 50%;
   width: 40px;
   height: 40px;
@@ -139,18 +140,20 @@ export default {
   justify-content: center;
   cursor: pointer;
   font-size: 1.2rem;
-  transition: all 0.3s ease;
+  transition: all var(--transition-normal);
   backdrop-filter: blur(4px);
 }
 
 .favorite-btn:hover {
-  background: rgba(255, 255, 255, 1);
+  background: var(--bg-secondary);
   transform: scale(1.1);
+  box-shadow: var(--shadow-md);
 }
 
 .favorite-btn.is-favorite {
-  background: #ff6b6b;
+  background: var(--danger-color);
   color: white;
+  border-color: var(--danger-color);
 }
 
 .recipe-content {
@@ -162,14 +165,14 @@ export default {
 
 .recipe-title {
   font-size: 1.3rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   margin-bottom: 8px;
-  color: #2d3748;
+  color: var(--text-primary);
   line-height: 1.3;
 }
 
 .recipe-description {
-  color: #718096;
+  color: var(--text-secondary);
   font-size: 0.95rem;
   margin-bottom: 16px;
   line-height: 1.5;
@@ -189,7 +192,7 @@ export default {
   align-items: center;
   gap: 4px;
   font-size: 0.9rem;
-  color: #4a5568;
+  color: var(--text-muted);
 }
 
 .meta-icon {
@@ -204,18 +207,18 @@ export default {
 
 .tag {
   padding: 4px 8px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 0.8rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .cuisine-tag {
-  background-color: #667eea;
+  background-color: var(--primary-color);
   color: white;
 }
 
 .dietary-tag {
-  background-color: #48bb78;
+  background-color: var(--accent-color);
   color: white;
 }
 

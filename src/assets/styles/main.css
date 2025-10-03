@@ -79,6 +79,37 @@
   --z-tooltip: 200;
 }
 
+/* Dark Mode Variables */
+[data-theme="dark"] {
+  /* Text Colors - Dark Mode */
+  --text-primary: #f7fafc;
+  --text-secondary: #e2e8f0;
+  --text-muted: #a0aec0;
+  --text-light: #718096;
+
+  /* Background Colors - Dark Mode */
+  --bg-primary: #1a202c;
+  --bg-secondary: #2d3748;
+  --bg-muted: #4a5568;
+  --bg-app: #171923;
+
+  /* Border Colors - Dark Mode */
+  --border-light: #4a5568;
+  --border-default: #2d3748;
+  --border-dark: #1a202c;
+
+  /* Shadows - Dark Mode */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.4);
+
+  /* Primary colors remain the same but with adjusted opacity for dark backgrounds */
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --primary-color: #7c8aed;
+  --primary-dark: #6b73d8;
+}
+
 /* Reset and Base Styles */
 *,
 *::before,

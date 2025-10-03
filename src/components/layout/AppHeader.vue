@@ -19,15 +19,18 @@
           </router-link>
         </div>
 
-        <button
-          class="nav-toggle"
-          @click="toggleMenu"
-          aria-label="Toggle navigation menu"
-        >
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
+        <div class="nav-actions">
+          <ThemeToggle />
+          <button
+            class="nav-toggle"
+            @click="toggleMenu"
+            aria-label="Toggle navigation menu"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+        </div>
       </div>
     </nav>
   </header>
@@ -35,9 +38,13 @@
 
 <script>
 import { mapGetters } from "vuex";
+import ThemeToggle from "@/components/ThemeToggle.vue";
 
 export default {
   name: "AppHeader",
+  components: {
+    ThemeToggle,
+  },
   data() {
     return {
       isMenuOpen: false,
@@ -59,7 +66,7 @@ export default {
 
 <style scoped>
 .app-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #667eea 0%, #9241f0 100%);
   color: white;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   position: sticky;
@@ -129,6 +136,12 @@ export default {
   text-align: center;
 }
 
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .nav-toggle {
   display: none;
   flex-direction: column;
@@ -157,7 +170,7 @@ export default {
     left: -100%;
     top: 70px;
     flex-direction: column;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #667eea 0%, #9241f0 100%);
     width: 100%;
     text-align: center;
     transition: 0.3s;

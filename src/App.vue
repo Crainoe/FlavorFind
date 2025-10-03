@@ -19,6 +19,9 @@ export default {
     AppFooter,
   },
   created() {
+    // Initialize theme before other app initialization
+    this.$store.dispatch("theme/initializeTheme");
+
     // Initialize the app by fetching recipes
     this.$store.dispatch("recipes/fetchRecipes");
   },
@@ -36,8 +39,10 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
     Ubuntu, Cantarell, sans-serif;
   line-height: 1.6;
-  color: #333;
-  background-color: #f8fafc;
+  color: var(--text-primary);
+  background-color: var(--bg-app);
+  transition: background-color var(--transition-normal),
+    color var(--transition-normal);
 }
 
 #app {

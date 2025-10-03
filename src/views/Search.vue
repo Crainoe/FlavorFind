@@ -198,13 +198,13 @@ export default {
 
 .search-header h1 {
   font-size: 2.5rem;
-  color: #2d3748;
+  color: var(--text-primary);
   margin-bottom: 12px;
 }
 
 .search-header p {
   font-size: 1.1rem;
-  color: #718096;
+  color: var(--text-secondary);
 }
 
 .search-results {
@@ -221,7 +221,7 @@ export default {
 }
 
 .results-header h2 {
-  color: #2d3748;
+  color: var(--text-primary);
   font-size: 1.5rem;
   display: flex;
   align-items: center;
@@ -229,20 +229,20 @@ export default {
 }
 
 .results-count {
-  color: #718096;
+  color: var(--text-secondary);
   font-weight: normal;
   font-size: 1rem;
 }
 
 .clear-all-btn {
-  background: #e53e3e;
+  background: var(--danger-color);
   color: white;
   border: none;
   padding: 10px 20px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  font-weight: 500;
-  transition: background 0.3s ease;
+  font-weight: var(--font-weight-medium);
+  transition: background var(--transition-normal);
 }
 
 .clear-all-btn:hover {
@@ -252,7 +252,7 @@ export default {
 .loading-state {
   text-align: center;
   padding: 60px 20px;
-  color: #718096;
+  color: var(--text-secondary);
 }
 
 .loading-spinner {
@@ -280,9 +280,10 @@ export default {
 .no-results {
   text-align: center;
   padding: 60px 20px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-light);
 }
 
 .no-results-icon {
@@ -291,32 +292,32 @@ export default {
 }
 
 .no-results h3 {
-  color: #2d3748;
+  color: var(--text-primary);
   font-size: 1.5rem;
   margin-bottom: 12px;
 }
 
 .no-results p {
-  color: #718096;
+  color: var(--text-secondary);
   margin-bottom: 24px;
 }
 
 .suggestions {
-  background: #f7fafc;
+  background: var(--bg-secondary);
   padding: 20px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   text-align: left;
   max-width: 400px;
   margin: 0 auto;
 }
 
 .suggestions h4 {
-  color: #4a5568;
+  color: var(--text-primary);
   margin-bottom: 12px;
 }
 
 .suggestions ul {
-  color: #718096;
+  color: var(--text-secondary);
   padding-left: 20px;
 }
 
@@ -355,14 +356,15 @@ export default {
 .search-tips {
   margin-top: 60px;
   padding: 40px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-light);
 }
 
 .search-tips h3 {
   text-align: center;
-  color: #2d3748;
+  color: var(--text-primary);
   font-size: 1.8rem;
   margin-bottom: 32px;
 }
@@ -376,9 +378,9 @@ export default {
 .tip-card {
   text-align: center;
   padding: 24px;
-  background: #f7fafc;
-  border-radius: 8px;
-  transition: transform 0.3s ease;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  transition: transform var(--transition-normal);
 }
 
 .tip-card:hover {
@@ -391,12 +393,12 @@ export default {
 }
 
 .tip-card h4 {
-  color: #2d3748;
+  color: var(--text-primary);
   margin-bottom: 8px;
 }
 
 .tip-card p {
-  color: #718096;
+  color: var(--text-secondary);
   font-size: 0.9rem;
   line-height: 1.5;
 }
