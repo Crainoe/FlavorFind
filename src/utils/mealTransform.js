@@ -158,7 +158,12 @@ export function transformMealData(meal) {
     difficulty: estimateDifficulty(meal),
     dietary: dietary,
     ingredients: ingredients,
-    instructions: meal.strInstructions || "",
+    instructions: meal.strInstructions
+      ? meal.strInstructions
+          .split(/\r?\n/)
+          .filter((line) => line.trim())
+          .map((line) => line.trim())
+      : [],
     source: meal.strSource || "",
     youtube: meal.strYoutube || "",
     tags: meal.strTags ? meal.strTags.split(",").map((tag) => tag.trim()) : [],

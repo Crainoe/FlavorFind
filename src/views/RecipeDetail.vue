@@ -100,7 +100,9 @@
               :key="index"
               class="ingredient-item"
             >
-              <span class="ingredient-text">{{ ingredient }}</span>
+              <span class="ingredient-text">{{
+                ingredient.combined || ingredient
+              }}</span>
             </li>
           </ul>
         </div>

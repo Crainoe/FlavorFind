@@ -1,7 +1,7 @@
 // TheMealDB API Service - Free Tier
 const BASE_URL = "https://www.themealdb.com/api/json/v1/1";
 
-export const mealService = {
+const mealService = {
   // Get random meals
   async getRandomMeals(count = 6) {
     try {
