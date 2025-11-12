@@ -20,6 +20,7 @@
         </div>
 
         <div class="nav-actions">
+          <AuthWidget />
           <ThemeToggle />
           <button
             class="nav-toggle"
@@ -39,11 +40,13 @@
 <script>
 import { mapGetters } from "vuex";
 import ThemeToggle from "@/components/ThemeToggle.vue";
+import AuthWidget from "@/components/AuthWidget.vue";
 
 export default {
   name: "AppHeader",
   components: {
     ThemeToggle,
+    AuthWidget,
   },
   data() {
     return {

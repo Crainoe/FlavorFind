@@ -2,8 +2,8 @@
   <div class="recipe-card" @click="viewRecipe">
     <div class="recipe-image-container">
       <img
-        :src="recipe.image"
-        :alt="recipe.title"
+        :src="recipe.strMealThumb || recipe.image"
+        :alt="recipe.strMeal || recipe.title"
         class="recipe-image"
         @error="handleImageError"
       />
@@ -18,33 +18,31 @@
     </div>
 
     <div class="recipe-content">
-      <h3 class="recipe-title">{{ recipe.title }}</h3>
-      <p class="recipe-description">{{ recipe.description }}</p>
+      <h3 class="recipe-title">{{ recipe.strMeal || recipe.title }}</h3>
+      <p class="recipe-description">{{ truncatedInstructions }}</p>
 
       <div class="recipe-meta">
-        <div class="meta-item">
+        <div class="meta-item" v-if="recipe.cookTime">
           <span class="meta-icon">⏱️</span>
           <span>{{ recipe.cookTime }} min</span>
         </div>
-        <div class="meta-item">
+        <div class="meta-item" v-if="recipe.servings">
           <span class="meta-icon">👥</span>
           <span>{{ recipe.servings }} servings</span>
         </div>
-        <div class="meta-item">
+        <div class="meta-item" v-if="recipe.strCategory">
           <span class="meta-icon">📊</span>
-          <span>{{ recipe.difficulty }}</span>
+          <span>{{ recipe.strCategory }}</span>
         </div>
       </div>
 
       <div class="recipe-tags">
-        <span class="tag cuisine-tag">{{ recipe.cuisine }}</span>
-        <span
-          v-for="dietary in recipe.dietary"
-          :key="dietary"
-          class="tag dietary-tag"
-        >
-          {{ dietary }}
-        </span>
+        <span v-if="recipe.strArea" class="tag cuisine-tag">{{
+          recipe.strArea
+        }}</span>
+        <span v-if="recipe.strCategory" class="tag dietary-tag">{{
+          recipe.strCategory
+        }}</span>
       </div>
     </div>
   </div>
@@ -62,21 +60,30 @@ export default {
     },
   },
   computed: {
-    ...mapGetters("favorites", ["isFavorite"]),
     isFavorite() {
-      return this.$store.getters["favorites/isFavorite"](this.recipe.id);
+      return this.$store.getters["favorites/isFavorite"](
+        this.recipe.idMeal || this.recipe.id
+      );
+    },
+
+    truncatedInstructions() {
+      const instructions =
+        this.recipe.strInstructions || this.recipe.description || "";
+      return instructions.length > 100
+        ? instructions.substring(0, 100) + "..."
+        : instructions;
     },
   },
   methods: {
     ...mapActions("favorites", ["addToFavorites", "removeFromFavorites"]),
 
     viewRecipe() {
-      this.$router.push(`/recipe/${this.recipe.id}`);
+      this.$router.push(`/recipe/${this.recipe.idMeal || this.recipe.id}`);
     },
 
     toggleFavorite() {
       if (this.isFavorite) {
-        this.removeFromFavorites(this.recipe.id);
+        this.removeFromFavorites(this.recipe.idMeal || this.recipe.id);
       } else {
         this.addToFavorites(this.recipe);
       }
