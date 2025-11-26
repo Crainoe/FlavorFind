@@ -336,23 +336,27 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 9999;
+  padding: 20px;
 }
 
 .modal-content {
-  background: var(--bg-color);
-  color: var(--text-color);
+  background: var(--bg-color, #ffffff);
+  color: var(--text-color, #000000);
   border-radius: 12px;
   padding: 24px;
   width: 100%;
   max-width: 400px;
   margin: 20px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3),
+    0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  position: relative;
+  z-index: 10000;
 }
 
 .modal-header {
@@ -372,8 +376,10 @@ export default {
   border: none;
   font-size: 24px;
   cursor: pointer;
-  color: var(--text-color);
+  color: var(--text-color, #666666);
   opacity: 0.7;
+  padding: 4px 8px;
+  line-height: 1;
 }
 
 .modal-close:hover {
@@ -393,16 +399,16 @@ export default {
   display: block;
   margin-bottom: 6px;
   font-weight: 500;
-  color: var(--text-color);
+  color: var(--text-color, #333333);
 }
 
 .form-control {
   width: 100%;
   padding: 12px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-color, #d1d5db);
   border-radius: 6px;
-  background: var(--input-bg);
-  color: var(--text-color);
+  background: var(--input-bg, #ffffff);
+  color: var(--text-color, #000000);
   font-size: 1rem;
   box-sizing: border-box;
 }
@@ -433,6 +439,41 @@ export default {
 }
 
 /* Dark theme support */
+[data-theme="dark"] .modal-content {
+  background: #1f2937;
+  color: #f9fafb;
+}
+
+[data-theme="dark"] .modal-header h2 {
+  color: #f9fafb;
+}
+
+[data-theme="dark"] .modal-close {
+  color: #f9fafb;
+}
+
+[data-theme="dark"] .form-group label {
+  color: #f9fafb;
+}
+
+[data-theme="dark"] .form-control {
+  background: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+[data-theme="dark"] .form-control::placeholder {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .auth-switch {
+  color: #d1d5db;
+}
+
+[data-theme="dark"] .auth-switch a {
+  color: #818cf8;
+}
+
 [data-theme="dark"] .alert-error {
   background: #dc262620;
   color: #f87171;

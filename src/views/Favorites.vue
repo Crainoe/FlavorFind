@@ -536,44 +536,6 @@ export default {
   transform: translateY(-1px);
 }
 
-@media (max-width: 768px) {
-  .favorites-header h1 {
-    font-size: 2rem;
-  }
-
-  .empty-actions {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .actions-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-
-  .favorites-controls {
-    flex-direction: column;
-    gap: 15px;
-    align-items: flex-start;
-  }
-
-  .bulk-actions {
-    width: 100%;
-  }
-
-  .clear-all-btn {
-    width: 100%;
-  }
-
-  .favorites-stats {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  }
-
-  .stat-card {
-    text-align: center;
-  }
-}
-
 /* Loading State */
 .loading-state {
   text-align: center;
@@ -591,8 +553,12 @@ export default {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-state p {
@@ -635,6 +601,43 @@ export default {
 .retry-btn:hover {
   background: var(--primary-dark);
 }
+
+@media (max-width: 768px) {
+  .favorites-header h1 {
+    font-size: 2rem;
+  }
+
+  .empty-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .actions-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .favorites-controls {
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+  }
+
+  .bulk-actions {
+    width: 100%;
+  }
+
+  .clear-all-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .favorites-stats {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+
+  .stat-card {
+    text-align: center;
   }
 
   .action-btn {
@@ -643,20 +646,7 @@ export default {
     justify-content: center;
   }
 
-  .favorites-controls {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .clear-all-btn {
-    justify-content: center;
-  }
-
   .recipes-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .actions-grid {
     grid-template-columns: 1fr;
   }
 

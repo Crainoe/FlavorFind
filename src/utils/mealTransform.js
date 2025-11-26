@@ -136,6 +136,72 @@ function estimateServings(meal) {
   return 6;
 }
 
+// Helper function to parse instructions into steps
+function parseInstructions(instructionsText) {
+  if (!instructionsText || !instructionsText.trim()) {
+    return ["No instructions available"];
+  }
+
+  const text = instructionsText.trim();
+  let steps = [];
+
+  // Method 1: Try splitting by numbered patterns (1., 2., Step 1, STEP 1, etc.)
+  const numberedPattern = /(?:^|\n)(?:step\s*)?(\d+)[\.):\s]+/gi;
+  const hasNumberedSteps = numberedPattern.test(text);
+
+  if (hasNumberedSteps) {
+    // Reset the regex
+    numberedPattern.lastIndex = 0;
+
+    // Split by numbered steps
+    const parts = text.split(/(?:^|\n)(?:step\s*)?\d+[\.):\s]+/gi);
+    steps = parts
+      .slice(1) // First element is usually empty or intro text
+      .map((step) => step.trim())
+      .filter((step) => step.length > 0);
+  }
+
+  // Method 2: If no numbered steps, try splitting by line breaks
+  if (steps.length === 0) {
+    steps = text
+      .split(/\r?\n+/)
+      .map((line) => line.trim())
+      .filter((line) => {
+        // Filter out empty lines and very short lines (likely not instructions)
+        return line.length > 10 && !line.match(/^[^a-zA-Z]+$/);
+      });
+  }
+
+  // Method 3: If still no steps, try splitting by sentences (periods followed by capital letters)
+  if (steps.length === 0 || steps.length === 1) {
+    // Split by period followed by capital letter or newline
+    const sentenceSteps = text.split(/\.\s+(?=[A-Z])/);
+    if (sentenceSteps.length > 1) {
+      steps = sentenceSteps
+        .map((step) => step.trim().replace(/\.$/, "")) // Remove trailing period
+        .filter((step) => step.length > 10);
+    }
+  }
+
+  // Method 4: If we still have nothing or just one long block, return as single step
+  if (steps.length === 0) {
+    steps = [text];
+  }
+
+  // Clean up steps: remove common prefixes and extra whitespace
+  steps = steps
+    .map((step) => {
+      return step
+        .replace(/^(step\s*\d+[\:)\.\s]*)/gi, "") // Remove "Step 1:" prefixes
+        .replace(/^\d+[\:)\.\s]+/, "") // Remove "1:" or "1." prefixes
+        .replace(/\s+/g, " ") // Normalize whitespace
+        .trim();
+    })
+    .filter((step) => step.length > 0);
+
+  return steps.length > 0 ? steps : ["No instructions available"];
+}
+
 // Main transformation function
 export function transformMealData(meal) {
   if (!meal) return null;
@@ -158,12 +224,7 @@ export function transformMealData(meal) {
     difficulty: estimateDifficulty(meal),
     dietary: dietary,
     ingredients: ingredients,
-    instructions: meal.strInstructions
-      ? meal.strInstructions
-          .split(/\r?\n/)
-          .filter((line) => line.trim())
-          .map((line) => line.trim())
-      : [],
+    instructions: parseInstructions(meal.strInstructions),
     source: meal.strSource || "",
     youtube: meal.strYoutube || "",
     tags: meal.strTags ? meal.strTags.split(",").map((tag) => tag.trim()) : [],

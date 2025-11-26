@@ -23,8 +23,8 @@
       <div class="recipe-header">
         <div class="recipe-image-section">
           <img
-            :src="currentRecipe.image"
-            :alt="currentRecipe.title"
+            :src="currentRecipe.strMealThumb || currentRecipe.image"
+            :alt="currentRecipe.strMeal || currentRecipe.title"
             class="recipe-image"
             @error="handleImageError"
           />
@@ -43,7 +43,12 @@
 
         <div class="recipe-info">
           <div class="recipe-badges">
-            <span class="badge cuisine-badge">{{ currentRecipe.cuisine }}</span>
+            <span class="badge cuisine-badge">{{
+              currentRecipe.strArea || currentRecipe.cuisine
+            }}</span>
+            <span v-if="currentRecipe.strCategory" class="badge dietary-badge">
+              {{ currentRecipe.strCategory }}
+            </span>
             <span
               v-for="dietary in currentRecipe.dietary"
               :key="dietary"
@@ -53,8 +58,17 @@
             </span>
           </div>
 
-          <h1 class="recipe-title">{{ currentRecipe.title }}</h1>
-          <p class="recipe-description">{{ currentRecipe.description }}</p>
+          <h1 class="recipe-title">
+            {{ currentRecipe.strMeal || currentRecipe.title }}
+          </h1>
+          <p class="recipe-description">
+            {{
+              currentRecipe.description ||
+              (currentRecipe.strInstructions
+                ? currentRecipe.strInstructions.substring(0, 150) + "..."
+                : "")
+            }}
+          </p>
 
           <div class="recipe-meta">
             <div class="meta-group">
@@ -149,7 +163,9 @@ export default {
 
     isFavorite() {
       return this.currentRecipe
-        ? this.$store.getters["favorites/isFavorite"](this.currentRecipe.id)
+        ? this.$store.getters["favorites/isFavorite"](
+            this.currentRecipe.id || this.currentRecipe.idMeal
+          )
         : false;
     },
   },
@@ -164,8 +180,9 @@ export default {
 
     toggleFavorite() {
       if (this.currentRecipe) {
+        const recipeId = this.currentRecipe.id || this.currentRecipe.idMeal;
         if (this.isFavorite) {
-          this.removeFromFavorites(this.currentRecipe.id);
+          this.removeFromFavorites(recipeId);
         } else {
           this.addToFavorites(this.currentRecipe);
         }
