@@ -198,6 +198,14 @@ const getters = {
   initialized: (state) => state.initialized,
   userEmail: (state) => state.user?.email || null,
   userId: (state) => state.user?.id || null,
+  userDisplayName: (state) => {
+    if (!state.user) return null;
+    // Check for full_name in user_metadata or raw_user_meta_data
+    const fullName =
+      state.user.user_metadata?.full_name ||
+      state.user.raw_user_meta_data?.full_name;
+    return fullName || state.user.email;
+  },
 };
 
 export default {

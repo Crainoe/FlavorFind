@@ -8,7 +8,7 @@
     <!-- Authenticated user -->
     <div v-else-if="isAuthenticated" class="auth-user">
       <div class="user-info">
-        <span class="user-email">{{ userEmail }}</span>
+        <span class="user-display">{{ userDisplayName }}</span>
         <button @click="handleSignOut" class="btn btn-outline btn-sm">
           Sign Out
         </button>
@@ -179,6 +179,7 @@ export default {
       "isAuthenticated",
       "user",
       "userEmail",
+      "userDisplayName",
       "loading",
       "error",
     ]),
@@ -279,9 +280,13 @@ export default {
   gap: 10px;
 }
 
-.user-email {
+.user-display {
   font-size: 0.9rem;
   opacity: 0.9;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .auth-guest {
