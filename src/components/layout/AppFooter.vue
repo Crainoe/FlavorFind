@@ -9,9 +9,21 @@
       <div class="footer-section">
         <h4>Quick Links</h4>
         <ul>
-          <li><router-link to="/">Home</router-link></li>
-          <li><router-link to="/search">Search Recipes</router-link></li>
-          <li><router-link to="/favorites">My Favorites</router-link></li>
+          <li>
+            <router-link to="/">
+              Home
+            </router-link>
+          </li>
+          <li>
+            <router-link to="/search">
+              Search Recipes
+            </router-link>
+          </li>
+          <li>
+            <router-link to="/favorites">
+              My Favorites
+            </router-link>
+          </li>
         </ul>
       </div>
 

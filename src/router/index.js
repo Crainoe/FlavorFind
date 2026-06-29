@@ -3,6 +3,9 @@ import Home from "@/views/Home.vue";
 import RecipeDetail from "@/views/RecipeDetail.vue";
 import Favorites from "@/views/Favorites.vue";
 import Search from "@/views/Search.vue";
+import Recipes from "@/views/Recipes.vue";
+import RecipeForm from "@/components/RecipeForm.vue";
+import store from "@/store";
 
 const routes = [
   {
@@ -38,6 +41,23 @@ const routes = [
     },
   },
   {
+    path: "/recipes",
+    name: "Recipes",
+    component: Recipes,
+    meta: {
+      title: "Community Recipes - FlavorFind",
+    },
+  },
+  {
+    path: "/recipes/new",
+    name: "RecipeNew",
+    component: RecipeForm,
+    meta: {
+      title: "Create Recipe - FlavorFind",
+      requiresAuth: true,
+    },
+  },
+  {
     path: "/:pathMatch(.*)*",
     redirect: "/",
   },
@@ -55,10 +75,14 @@ const router = createRouter({
   },
 });
 
-// Update page title on route change
 router.beforeEach((to, from, next) => {
   document.title = to.meta.title || "Recipe Explorer";
-  next();
+
+  if (to.meta.requiresAuth && !store.getters["auth/isAuthenticated"]) {
+    next({ path: "/", query: { auth: "required", redirect: to.fullPath } });
+  } else {
+    next();
+  }
 });
 
 export default router;

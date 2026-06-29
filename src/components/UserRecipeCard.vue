@@ -5,18 +5,25 @@
   >
     <div class="recipe-image-container">
       <img
-        :src="recipe.strMealThumb || recipe.image"
+        :src="recipe.strMealThumb || recipe.image || defaultImage"
         :alt="recipe.strMeal || recipe.title"
         class="recipe-image"
         @error="handleImageError"
       >
-      <button
-        class="favorite-btn"
-        :class="{ 'is-favorite': isFavorite }"
-        :aria-label="isFavorite ? 'Remove from favorites' : 'Add to favorites'"
-        @click.stop="toggleFavorite"
+      <span
+        v-if="!recipe.isPublic"
+        class="private-badge"
+        title="Private recipe"
       >
-        ❤️
+        🔒 Private
+      </span>
+      <button
+        v-if="canDelete"
+        class="delete-btn"
+        :aria-label="'Delete recipe'"
+        @click.stop="confirmDelete"
+      >
+        🗑
       </button>
     </div>
 
@@ -25,7 +32,7 @@
         {{ recipe.strMeal || recipe.title }}
       </h3>
       <p class="recipe-description">
-        {{ truncatedInstructions }}
+        {{ truncatedDescription }}
       </p>
 
       <div class="recipe-meta">
@@ -43,77 +50,74 @@
           <span class="meta-icon">👥</span>
           <span>{{ recipe.servings }} servings</span>
         </div>
-        <div
-          v-if="recipe.strCategory"
-          class="meta-item"
-        >
-          <span class="meta-icon">📊</span>
-          <span>{{ recipe.strCategory }}</span>
-        </div>
       </div>
 
       <div class="recipe-tags">
         <span
-          v-if="recipe.strArea"
+          v-if="recipe.strArea || recipe.cuisine"
           class="tag cuisine-tag"
-        >{{
-          recipe.strArea
-        }}</span>
+        >
+          {{ recipe.strArea || recipe.cuisine }}
+        </span>
         <span
-          v-if="recipe.strCategory"
+          v-if="recipe.strCategory || recipe.category"
           class="tag dietary-tag"
-        >{{
-          recipe.strCategory
-        }}</span>
+        >
+          {{ recipe.strCategory || recipe.category }}
+        </span>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { mapActions } from "vuex";
+import { mapActions, mapGetters } from "vuex";
 
 export default {
-  name: "RecipeCard",
+  name: "UserRecipeCard",
   props: {
     recipe: {
       type: Object,
       required: true,
     },
+    showDelete: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  data() {
+    return {
+      defaultImage:
+        "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400",
+    };
   },
   computed: {
-    isFavorite() {
-      return this.$store.getters["favorites/isFavorite"](
-        this.recipe.idMeal || this.recipe.id
-      );
+    ...mapGetters("auth", ["userId"]),
+    canDelete() {
+      return this.showDelete && this.userId === this.recipe.userId;
     },
-
-    truncatedInstructions() {
-      const instructions =
-        this.recipe.strInstructions || this.recipe.description || "";
-      return instructions.length > 100
-        ? instructions.substring(0, 100) + "..."
-        : instructions;
+    truncatedDescription() {
+      const text = this.recipe.description || "";
+      return text.length > 100 ? text.substring(0, 100) + "..." : text;
     },
   },
   methods: {
-    ...mapActions("favorites", ["addToFavorites", "removeFromFavorites"]),
-
+    ...mapActions("userRecipes", ["deleteRecipe"]),
     viewRecipe() {
-      this.$router.push(`/recipe/${this.recipe.idMeal || this.recipe.id}`);
+      this.$router.push(`/recipe/${this.recipe.id}`);
     },
-
-    toggleFavorite() {
-      if (this.isFavorite) {
-        this.removeFromFavorites(this.recipe.idMeal || this.recipe.id);
-      } else {
-        this.addToFavorites(this.recipe);
+    async confirmDelete() {
+      if (!confirm(`Delete "${this.recipe.title}"? This cannot be undone.`)) {
+        return;
+      }
+      try {
+        await this.deleteRecipe(this.recipe.id);
+      } catch (err) {
+        alert("Could not delete recipe: " + err.message);
       }
     },
-
     handleImageError(event) {
-      event.target.src =
-        "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400";
+      event.target.src = this.defaultImage;
     },
   },
 };
@@ -125,12 +129,13 @@ export default {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   overflow: hidden;
-  transition: all var(--transition-normal);
+  transition: all 0.2s ease;
   cursor: pointer;
   height: 100%;
   display: flex;
   flex-direction: column;
   border: 1px solid var(--border-light);
+  position: relative;
 }
 
 .recipe-card:hover {
@@ -148,41 +153,44 @@ export default {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform var(--transition-normal);
+  transition: transform 0.2s ease;
 }
 
 .recipe-card:hover .recipe-image {
   transform: scale(1.05);
 }
 
-.favorite-btn {
+.private-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.delete-btn {
   position: absolute;
   top: 12px;
   right: 12px;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-light);
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 1.2rem;
-  transition: all var(--transition-normal);
-  backdrop-filter: blur(4px);
+  font-size: 1rem;
 }
 
-.favorite-btn:hover {
-  background: var(--bg-secondary);
-  transform: scale(1.1);
-  box-shadow: var(--shadow-md);
-}
-
-.favorite-btn.is-favorite {
+.delete-btn:hover {
   background: var(--danger-color);
   color: white;
-  border-color: var(--danger-color);
 }
 
 .recipe-content {
@@ -193,8 +201,8 @@ export default {
 }
 
 .recipe-title {
-  font-size: 1.3rem;
-  font-weight: var(--font-weight-semibold);
+  font-size: 1.2rem;
+  font-weight: 600;
   margin-bottom: 8px;
   color: var(--text-primary);
   line-height: 1.3;
@@ -202,7 +210,7 @@ export default {
 
 .recipe-description {
   color: var(--text-secondary);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   margin-bottom: 16px;
   line-height: 1.5;
   flex: 1;
@@ -210,22 +218,17 @@ export default {
 
 .recipe-meta {
   display: flex;
-  justify-content: space-between;
-  margin-bottom: 16px;
+  gap: 12px;
+  margin-bottom: 12px;
   flex-wrap: wrap;
-  gap: 8px;
 }
 
 .meta-item {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
-}
-
-.meta-icon {
-  font-size: 1rem;
 }
 
 .recipe-tags {
@@ -236,33 +239,18 @@ export default {
 
 .tag {
   padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  font-size: 0.8rem;
-  font-weight: var(--font-weight-medium);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
 .cuisine-tag {
-  background-color: var(--primary-color);
+  background: var(--primary-color);
   color: white;
 }
 
 .dietary-tag {
-  background-color: var(--accent-color);
+  background: var(--accent-color);
   color: white;
-}
-
-@media (max-width: 480px) {
-  .recipe-content {
-    padding: 16px;
-  }
-
-  .recipe-title {
-    font-size: 1.2rem;
-  }
-
-  .recipe-meta {
-    flex-direction: column;
-    gap: 4px;
-  }
 }
 </style>

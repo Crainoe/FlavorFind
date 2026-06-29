@@ -2,20 +2,58 @@
   <header class="app-header">
     <nav class="navbar">
       <div class="nav-container">
-        <router-link to="/" class="nav-brand"> 🍳 Flavor Find </router-link>
+        <router-link
+          to="/"
+          class="nav-brand"
+        >
+          🍳 Flavor Find
+        </router-link>
 
-        <div class="nav-menu" :class="{ 'nav-menu-active': isMenuOpen }">
-          <router-link to="/" class="nav-link" @click="closeMenu"
-            >Home</router-link
+        <div
+          class="nav-menu"
+          :class="{ 'nav-menu-active': isMenuOpen }"
+        >
+          <router-link
+            to="/"
+            class="nav-link"
+            @click="closeMenu"
           >
-          <router-link to="/search" class="nav-link" @click="closeMenu"
-            >Search</router-link
+            Home
+          </router-link>
+          <router-link
+            to="/search"
+            class="nav-link"
+            @click="closeMenu"
           >
-          <router-link to="/favorites" class="nav-link" @click="closeMenu">
+            Search
+          </router-link>
+          <router-link
+            to="/recipes"
+            class="nav-link"
+            @click="closeMenu"
+          >
+            Recipes
+          </router-link>
+          <router-link
+            to="/favorites"
+            class="nav-link"
+            @click="closeMenu"
+          >
             Favorites
-            <span v-if="favoritesCount > 0" class="favorites-badge">
+            <span
+              v-if="favoritesCount > 0"
+              class="favorites-badge"
+            >
               {{ favoritesCount }}
             </span>
+          </router-link>
+          <router-link
+            v-if="isAuthenticated"
+            to="/recipes/new"
+            class="nav-link nav-link-cta"
+            @click="closeMenu"
+          >
+            + New Recipe
           </router-link>
         </div>
 
@@ -24,12 +62,12 @@
           <ThemeToggle />
           <button
             class="nav-toggle"
-            @click="toggleMenu"
             aria-label="Toggle navigation menu"
+            @click="toggleMenu"
           >
-            <span></span>
-            <span></span>
-            <span></span>
+            <span />
+            <span />
+            <span />
           </button>
         </div>
       </div>
@@ -55,6 +93,7 @@ export default {
   },
   computed: {
     ...mapGetters("favorites", ["favoritesCount"]),
+    ...mapGetters("auth", ["isAuthenticated"]),
   },
   methods: {
     toggleMenu() {
@@ -126,6 +165,15 @@ export default {
 
 .nav-link.router-link-active {
   background-color: rgba(255, 255, 255, 0.2);
+}
+
+.nav-link-cta {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.nav-link-cta:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .favorites-badge {

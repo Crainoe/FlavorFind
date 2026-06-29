@@ -7,36 +7,62 @@
           favoriteRecipes.length !== 1 ? "s" : ""
         }}
       </p>
-      <p v-else>Start building your personal recipe collection</p>
+      <p v-else>
+        Start building your personal recipe collection
+      </p>
     </div>
 
     <!-- Loading State -->
-    <div v-if="loading" class="loading-state">
-      <div class="loading-spinner"></div>
+    <div
+      v-if="loading"
+      class="loading-state"
+    >
+      <div class="loading-spinner" />
       <p>Loading your favorites...</p>
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error" class="error-state">
-      <div class="error-icon">⚠️</div>
+    <div
+      v-else-if="error"
+      class="error-state"
+    >
+      <div class="error-icon">
+        ⚠️
+      </div>
       <h2>Error Loading Favorites</h2>
       <p>{{ error }}</p>
-      <button @click="retryLoad" class="retry-btn">Try Again</button>
+      <button
+        class="retry-btn"
+        @click="retryLoad"
+      >
+        Try Again
+      </button>
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="favoriteRecipes.length === 0" class="empty-state">
-      <div class="empty-icon">💔</div>
+    <div
+      v-else-if="favoriteRecipes.length === 0"
+      class="empty-state"
+    >
+      <div class="empty-icon">
+        💔
+      </div>
       <h2>No favorites yet</h2>
       <p>
         Discover amazing recipes and save your favorites for easy access later.
       </p>
 
       <div class="empty-actions">
-        <router-link to="/" class="action-btn primary">
+        <router-link
+          to="/"
+          class="action-btn primary"
+        >
           🏠 Browse Recipes
         </router-link>
-        <router-link to="/search" class="action-btn secondary">
+        <router-link
+          to="/search"
+          class="action-btn secondary"
+        >
           🔍 Search Recipes
         </router-link>
       </div>
@@ -52,24 +78,27 @@
     </div>
 
     <!-- Favorites Grid -->
-    <div v-else class="favorites-content">
+    <div
+      v-else
+      class="favorites-content"
+    >
       <div class="favorites-controls">
         <div class="view-options">
           <label>
             <input
-              type="checkbox"
               v-model="showOnlyNew"
+              type="checkbox"
               @change="filterFavorites"
-            />
+            >
             Recently Added
           </label>
         </div>
 
         <div class="bulk-actions">
           <button
-            @click="clearAllFavorites"
             class="clear-all-btn"
             :disabled="favoriteRecipes.length === 0"
+            @click="clearAllFavorites"
           >
             🗑️ Clear All Favorites
           </button>
@@ -78,16 +107,28 @@
 
       <div class="favorites-stats">
         <div class="stat-card">
-          <div class="stat-number">{{ favoriteRecipes.length }}</div>
-          <div class="stat-label">Total Favorites</div>
+          <div class="stat-number">
+            {{ favoriteRecipes.length }}
+          </div>
+          <div class="stat-label">
+            Total Favorites
+          </div>
         </div>
         <div class="stat-card">
-          <div class="stat-number">{{ uniqueCuisines }}</div>
-          <div class="stat-label">Different Cuisines</div>
+          <div class="stat-number">
+            {{ uniqueCuisines }}
+          </div>
+          <div class="stat-label">
+            Different Cuisines
+          </div>
         </div>
         <div class="stat-card">
-          <div class="stat-number">{{ averageCookTime }}</div>
-          <div class="stat-label">Avg. Cook Time</div>
+          <div class="stat-number">
+            {{ averageCookTime }}
+          </div>
+          <div class="stat-label">
+            Avg. Cook Time
+          </div>
         </div>
       </div>
 
@@ -104,28 +145,45 @@
         <h3>Quick Actions</h3>
         <div class="actions-grid">
           <div class="action-card">
-            <div class="action-icon">📧</div>
+            <div class="action-icon">
+              📧
+            </div>
             <h4>Export Favorites</h4>
             <p>Download your favorite recipes as a PDF or share via email</p>
-            <button @click="exportFavorites" class="card-btn">
+            <button
+              class="card-btn"
+              @click="exportFavorites"
+            >
               Export List
             </button>
           </div>
 
           <div class="action-card">
-            <div class="action-icon">🛒</div>
+            <div class="action-icon">
+              🛒
+            </div>
             <h4>Shopping List</h4>
             <p>Generate a shopping list from your favorite recipes</p>
-            <button @click="generateShoppingList" class="card-btn">
+            <button
+              class="card-btn"
+              @click="generateShoppingList"
+            >
               Create List
             </button>
           </div>
 
           <div class="action-card">
-            <div class="action-icon">🔍</div>
+            <div class="action-icon">
+              🔍
+            </div>
             <h4>Find Similar</h4>
             <p>Discover new recipes based on your favorites</p>
-            <router-link to="/search" class="card-btn"> Find More </router-link>
+            <router-link
+              to="/search"
+              class="card-btn"
+            >
+              Find More
+            </router-link>
           </div>
         </div>
       </div>
@@ -175,6 +233,20 @@ export default {
       return Math.round(total / this.favoriteRecipes.length) + "m";
     },
   },
+  watch: {
+    favoriteRecipes: {
+      handler() {
+        this.filterFavorites();
+      },
+      deep: true,
+    },
+  },
+
+  async mounted() {
+    await this.loadFavorites();
+    this.filterFavorites();
+  },
+
   methods: {
     ...mapActions("favorites", ["clearFavorites", "loadFavorites"]),
 
@@ -184,8 +256,6 @@ export default {
 
     filterFavorites() {
       if (this.showOnlyNew) {
-        // Show recipes added in the last 7 days (simulated)
-        // In a real app, you'd track when recipes were added to favorites
         this.filteredFavorites = this.favoriteRecipes.slice(-3);
       } else {
         this.filteredFavorites = [...this.favoriteRecipes];
@@ -204,7 +274,6 @@ export default {
     },
 
     exportFavorites() {
-      // Create a simple text export of favorites
       const favoritesList = this.favoriteRecipes
         .map(
           (recipe) =>
@@ -226,10 +295,8 @@ export default {
     },
 
     generateShoppingList() {
-      // Collect all ingredients from favorite recipes
       const allIngredients = this.favoriteRecipes.flatMap((recipe) => {
         const ingredients = [];
-        // TheMealDB has ingredients in strIngredient1, strIngredient2, etc.
         for (let i = 1; i <= 20; i++) {
           const ingredient = recipe[`strIngredient${i}`];
           if (ingredient && ingredient.trim()) {
@@ -248,20 +315,6 @@ export default {
       a.download = "shopping-list.txt";
       a.click();
       URL.revokeObjectURL(url);
-    },
-  },
-
-  async mounted() {
-    await this.loadFavorites();
-    this.filterFavorites();
-  },
-
-  watch: {
-    favoriteRecipes: {
-      handler() {
-        this.filterFavorites();
-      },
-      deep: true,
     },
   },
 };

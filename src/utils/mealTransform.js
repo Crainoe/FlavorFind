@@ -146,7 +146,7 @@ function parseInstructions(instructionsText) {
   let steps = [];
 
   // Method 1: Try splitting by numbered patterns (1., 2., Step 1, STEP 1, etc.)
-  const numberedPattern = /(?:^|\n)(?:step\s*)?(\d+)[\.):\s]+/gi;
+  const numberedPattern = /(?:^|\n)(?:step\s*)?(\d+)[.):\s]+/gi;
   const hasNumberedSteps = numberedPattern.test(text);
 
   if (hasNumberedSteps) {
@@ -154,7 +154,7 @@ function parseInstructions(instructionsText) {
     numberedPattern.lastIndex = 0;
 
     // Split by numbered steps
-    const parts = text.split(/(?:^|\n)(?:step\s*)?\d+[\.):\s]+/gi);
+    const parts = text.split(/(?:^|\n)(?:step\s*)?\d+[.):\s]+/gi);
     steps = parts
       .slice(1) // First element is usually empty or intro text
       .map((step) => step.trim())
@@ -192,8 +192,8 @@ function parseInstructions(instructionsText) {
   steps = steps
     .map((step) => {
       return step
-        .replace(/^(step\s*\d+[\:)\.\s]*)/gi, "") // Remove "Step 1:" prefixes
-        .replace(/^\d+[\:)\.\s]+/, "") // Remove "1:" or "1." prefixes
+        .replace(/^(step\s*\d+[:).\s]*)/gi, "") // Remove "Step 1:" prefixes
+        .replace(/^\d+[:).\s]+/, "") // Remove "1:" or "1." prefixes
         .replace(/\s+/g, " ") // Normalize whitespace
         .trim();
     })

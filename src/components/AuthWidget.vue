@@ -1,39 +1,72 @@
 <template>
   <div class="auth-widget">
     <!-- Loading state -->
-    <div v-if="loading" class="auth-loading">
-      <span class="spinner"></span>
+    <div
+      v-if="loading"
+      class="auth-loading"
+    >
+      <span class="spinner" />
     </div>
 
     <!-- Authenticated user -->
-    <div v-else-if="isAuthenticated" class="auth-user">
+    <div
+      v-else-if="isAuthenticated"
+      class="auth-user"
+    >
       <div class="user-info">
         <span class="user-display">{{ userDisplayName }}</span>
-        <button @click="handleSignOut" class="btn btn-outline btn-sm">
+        <button
+          class="btn btn-outline btn-sm"
+          @click="handleSignOut"
+        >
           Sign Out
         </button>
       </div>
     </div>
 
     <!-- Guest user -->
-    <div v-else class="auth-guest">
-      <button @click="showSignIn = true" class="btn btn-primary btn-sm">
+    <div
+      v-else
+      class="auth-guest"
+    >
+      <button
+        class="btn btn-primary btn-sm"
+        @click="showSignIn = true"
+      >
         Sign In
       </button>
-      <button @click="showSignUp = true" class="btn btn-outline btn-sm">
+      <button
+        class="btn btn-outline btn-sm"
+        @click="showSignUp = true"
+      >
         Sign Up
       </button>
     </div>
 
     <!-- Sign In Modal -->
-    <div v-if="showSignIn" class="modal-overlay" @click="closeModals">
-      <div class="modal-content" @click.stop>
+    <div
+      v-if="showSignIn"
+      class="modal-overlay"
+      @click="closeModals"
+    >
+      <div
+        class="modal-content"
+        @click.stop
+      >
         <div class="modal-header">
           <h2>Sign In</h2>
-          <button @click="closeModals" class="modal-close">&times;</button>
+          <button
+            class="modal-close"
+            @click="closeModals"
+          >
+            &times;
+          </button>
         </div>
 
-        <form @submit.prevent="handleSignIn" class="auth-form">
+        <form
+          class="auth-form"
+          @submit.prevent="handleSignIn"
+        >
           <div class="form-group">
             <label for="signin-email">Email</label>
             <input
@@ -43,7 +76,7 @@
               required
               class="form-control"
               placeholder="Enter your email"
-            />
+            >
           </div>
 
           <div class="form-group">
@@ -55,10 +88,13 @@
               required
               class="form-control"
               placeholder="Enter your password"
-            />
+            >
           </div>
 
-          <div v-if="error" class="alert alert-error">
+          <div
+            v-if="error"
+            class="alert alert-error"
+          >
             {{ error }}
           </div>
 
@@ -67,27 +103,48 @@
             :disabled="loading"
             class="btn btn-primary btn-full"
           >
-            <span v-if="loading" class="spinner"></span>
+            <span
+              v-if="loading"
+              class="spinner"
+            />
             {{ loading ? "Signing In..." : "Sign In" }}
           </button>
         </form>
 
         <p class="auth-switch">
           Don't have an account?
-          <a href="#" @click="switchToSignUp">Sign Up</a>
+          <a
+            href="#"
+            @click="switchToSignUp"
+          >Sign Up</a>
         </p>
       </div>
     </div>
 
     <!-- Sign Up Modal -->
-    <div v-if="showSignUp" class="modal-overlay" @click="closeModals">
-      <div class="modal-content" @click.stop>
+    <div
+      v-if="showSignUp"
+      class="modal-overlay"
+      @click="closeModals"
+    >
+      <div
+        class="modal-content"
+        @click.stop
+      >
         <div class="modal-header">
           <h2>Sign Up</h2>
-          <button @click="closeModals" class="modal-close">&times;</button>
+          <button
+            class="modal-close"
+            @click="closeModals"
+          >
+            &times;
+          </button>
         </div>
 
-        <form @submit.prevent="handleSignUp" class="auth-form">
+        <form
+          class="auth-form"
+          @submit.prevent="handleSignUp"
+        >
           <div class="form-group">
             <label for="signup-email">Email</label>
             <input
@@ -97,7 +154,7 @@
               required
               class="form-control"
               placeholder="Enter your email"
-            />
+            >
           </div>
 
           <div class="form-group">
@@ -110,7 +167,7 @@
               minlength="6"
               class="form-control"
               placeholder="Enter a password (min 6 characters)"
-            />
+            >
           </div>
 
           <div class="form-group">
@@ -121,14 +178,20 @@
               type="text"
               class="form-control"
               placeholder="Enter your full name"
-            />
+            >
           </div>
 
-          <div v-if="error" class="alert alert-error">
+          <div
+            v-if="error"
+            class="alert alert-error"
+          >
             {{ error }}
           </div>
 
-          <div v-if="signUpSuccess" class="alert alert-success">
+          <div
+            v-if="signUpSuccess"
+            class="alert alert-success"
+          >
             Account created! Please check your email to verify your account.
           </div>
 
@@ -137,14 +200,20 @@
             :disabled="loading"
             class="btn btn-primary btn-full"
           >
-            <span v-if="loading" class="spinner"></span>
+            <span
+              v-if="loading"
+              class="spinner"
+            />
             {{ loading ? "Creating Account..." : "Sign Up" }}
           </button>
         </form>
 
         <p class="auth-switch">
           Already have an account?
-          <a href="#" @click="switchToSignIn">Sign In</a>
+          <a
+            href="#"
+            @click="switchToSignIn"
+          >Sign In</a>
         </p>
       </div>
     </div>
@@ -183,6 +252,15 @@ export default {
       "loading",
       "error",
     ]),
+  },
+
+  watch: {
+    showSignIn() {
+      this.clearError();
+    },
+    showSignUp() {
+      this.clearError();
+    },
   },
 
   methods: {
@@ -248,16 +326,6 @@ export default {
     resetForms() {
       this.signInForm = { email: "", password: "" };
       this.signUpForm = { email: "", password: "", name: "" };
-    },
-  },
-
-  watch: {
-    // Clear error when switching between modals
-    showSignIn() {
-      this.clearError();
-    },
-    showSignUp() {
-      this.clearError();
     },
   },
 };

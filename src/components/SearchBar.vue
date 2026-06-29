@@ -3,23 +3,30 @@
     <div class="search-input-container">
       <input
         v-model="localQuery"
-        @input="handleInput"
-        @keyup.enter="handleSearch"
         type="text"
         placeholder="Search recipes, ingredients, or cuisines..."
         class="search-input"
-      />
+        @input="handleInput"
+        @keyup.enter="handleSearch"
+      >
       <button
-        @click="handleSearch"
         class="search-button"
         :disabled="isSearching"
+        @click="handleSearch"
       >
         <span v-if="!isSearching">🔍</span>
-        <span v-else class="loading-spinner">⏳</span>
+        <span
+          v-else
+          class="loading-spinner"
+        >⏳</span>
       </button>
     </div>
 
-    <button v-if="showClearButton" @click="clearSearch" class="clear-button">
+    <button
+      v-if="showClearButton"
+      class="clear-button"
+      @click="clearSearch"
+    >
       Clear
     </button>
   </div>
@@ -41,14 +48,21 @@ export default {
       return this.localQuery.length > 0;
     },
   },
-  mounted() {
-    this.localQuery = this.searchQuery;
-  },
   watch: {
     searchQuery(newQuery) {
       this.localQuery = newQuery;
     },
   },
+  mounted() {
+    this.localQuery = this.searchQuery;
+  },
+
+  beforeUnmount() {
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+  },
+
   methods: {
     ...mapActions("search", [
       "updateSearchQuery",
@@ -58,7 +72,6 @@ export default {
 
     handleInput() {
       this.updateSearchQuery(this.localQuery);
-      // Debounced search - search after user stops typing for 500ms
       clearTimeout(this.searchTimeout);
       this.searchTimeout = setTimeout(() => {
         if (this.localQuery.trim()) {
@@ -78,12 +91,6 @@ export default {
       this.localQuery = "";
       this.clearSearch();
     },
-  },
-
-  beforeUnmount() {
-    if (this.searchTimeout) {
-      clearTimeout(this.searchTimeout);
-    }
   },
 };
 </script>

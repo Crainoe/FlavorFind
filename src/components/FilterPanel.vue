@@ -4,8 +4,8 @@
       <h3>Filters</h3>
       <button
         v-if="hasActiveFilters"
-        @click="clearAllFilters"
         class="clear-filters-btn"
+        @click="clearAllFilters"
       >
         Clear All
       </button>
@@ -17,18 +17,36 @@
         <select
           id="cuisine-filter"
           v-model="localFilters.cuisine"
-          @change="updateFilter('cuisine', $event.target.value)"
           class="filter-select"
+          @change="updateFilter('cuisine', $event.target.value)"
         >
-          <option value="">All Cuisines</option>
-          <option value="Italian">Italian</option>
-          <option value="Japanese">Japanese</option>
-          <option value="Mediterranean">Mediterranean</option>
-          <option value="Mexican">Mexican</option>
-          <option value="Indian">Indian</option>
-          <option value="American">American</option>
-          <option value="French">French</option>
-          <option value="Thai">Thai</option>
+          <option value="">
+            All Cuisines
+          </option>
+          <option value="Italian">
+            Italian
+          </option>
+          <option value="Japanese">
+            Japanese
+          </option>
+          <option value="Mediterranean">
+            Mediterranean
+          </option>
+          <option value="Mexican">
+            Mexican
+          </option>
+          <option value="Indian">
+            Indian
+          </option>
+          <option value="American">
+            American
+          </option>
+          <option value="French">
+            French
+          </option>
+          <option value="Thai">
+            Thai
+          </option>
         </select>
       </div>
 
@@ -37,16 +55,30 @@
         <select
           id="dietary-filter"
           v-model="localFilters.dietary"
-          @change="updateFilter('dietary', $event.target.value)"
           class="filter-select"
+          @change="updateFilter('dietary', $event.target.value)"
         >
-          <option value="">All Diets</option>
-          <option value="Vegetarian">Vegetarian</option>
-          <option value="Vegan">Vegan</option>
-          <option value="Gluten-Free">Gluten-Free</option>
-          <option value="Dairy-Free">Dairy-Free</option>
-          <option value="Keto">Keto</option>
-          <option value="Paleo">Paleo</option>
+          <option value="">
+            All Diets
+          </option>
+          <option value="Vegetarian">
+            Vegetarian
+          </option>
+          <option value="Vegan">
+            Vegan
+          </option>
+          <option value="Gluten-Free">
+            Gluten-Free
+          </option>
+          <option value="Dairy-Free">
+            Dairy-Free
+          </option>
+          <option value="Keto">
+            Keto
+          </option>
+          <option value="Paleo">
+            Paleo
+          </option>
         </select>
       </div>
 
@@ -55,13 +87,21 @@
         <select
           id="difficulty-filter"
           v-model="localFilters.difficulty"
-          @change="updateFilter('difficulty', $event.target.value)"
           class="filter-select"
+          @change="updateFilter('difficulty', $event.target.value)"
         >
-          <option value="">All Levels</option>
-          <option value="Easy">Easy</option>
-          <option value="Medium">Medium</option>
-          <option value="Hard">Hard</option>
+          <option value="">
+            All Levels
+          </option>
+          <option value="Easy">
+            Easy
+          </option>
+          <option value="Medium">
+            Medium
+          </option>
+          <option value="Hard">
+            Hard
+          </option>
         </select>
       </div>
 
@@ -70,25 +110,40 @@
         <select
           id="time-filter"
           v-model="localFilters.maxCookTime"
+          class="filter-select"
           @change="
             updateFilter(
               'maxCookTime',
               $event.target.value ? parseInt($event.target.value) : null
             )
           "
-          class="filter-select"
         >
-          <option value="">Any Time</option>
-          <option value="15">15 minutes</option>
-          <option value="30">30 minutes</option>
-          <option value="45">45 minutes</option>
-          <option value="60">1 hour</option>
-          <option value="90">1.5 hours</option>
+          <option value="">
+            Any Time
+          </option>
+          <option value="15">
+            15 minutes
+          </option>
+          <option value="30">
+            30 minutes
+          </option>
+          <option value="45">
+            45 minutes
+          </option>
+          <option value="60">
+            1 hour
+          </option>
+          <option value="90">
+            1.5 hours
+          </option>
         </select>
       </div>
     </div>
 
-    <div v-if="hasActiveFilters" class="active-filters">
+    <div
+      v-if="hasActiveFilters"
+      class="active-filters"
+    >
       <h4>Active Filters:</h4>
       <div class="filter-tags">
         <span
@@ -142,9 +197,6 @@ export default {
   computed: {
     ...mapGetters("search", ["filters", "hasActiveFilters"]),
   },
-  mounted() {
-    this.localFilters = { ...this.filters };
-  },
   watch: {
     filters: {
       handler(newFilters) {
@@ -152,6 +204,9 @@ export default {
       },
       deep: true,
     },
+  },
+  mounted() {
+    this.localFilters = { ...this.filters };
   },
   methods: {
     ...mapActions("search", ["updateFilter", "clearFilters"]),

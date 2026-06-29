@@ -3,12 +3,17 @@
     <!-- Hero Section -->
     <section class="hero-section">
       <div class="hero-content">
-        <h1 class="hero-title">Discover Amazing Recipes</h1>
+        <h1 class="hero-title">
+          Never lose a family recipe again.
+        </h1>
         <p class="hero-subtitle">
-          Explore thousands of delicious recipes from around the world. Save
-          your favorites and find your next culinary adventure.
+          Save your own recipes, discover new favourites, and choose whether
+          they're private or shared with the world.
         </p>
-        <router-link to="/search" class="hero-cta">
+        <router-link
+          to="/search"
+          class="hero-cta"
+        >
           Start Exploring
         </router-link>
       </div>
@@ -21,16 +26,32 @@
         <p>Popular recipes loved by our community</p>
       </div>
 
-      <div v-if="isLoading" class="loading-state">
-        <div class="loading-spinner">Loading delicious recipes...</div>
+      <div
+        v-if="isLoading"
+        class="loading-state"
+      >
+        <div class="loading-spinner">
+          Loading delicious recipes...
+        </div>
       </div>
 
-      <div v-else-if="error" class="error-state">
+      <div
+        v-else-if="error"
+        class="error-state"
+      >
         <p>{{ error }}</p>
-        <button @click="loadRecipes" class="retry-btn">Try Again</button>
+        <button
+          class="retry-btn"
+          @click="loadRecipes"
+        >
+          Try Again
+        </button>
       </div>
 
-      <div v-else class="recipes-grid">
+      <div
+        v-else
+        class="recipes-grid"
+      >
         <RecipeCard
           v-for="recipe in featuredRecipes"
           :key="recipe.id"
@@ -44,31 +65,51 @@
       <h2>Quick Actions</h2>
       <div class="actions-grid">
         <div class="action-card">
-          <div class="action-icon">🔍</div>
+          <div class="action-icon">
+            🔍
+          </div>
           <h3>Search Recipes</h3>
           <p>Find recipes by ingredients, cuisine, or dietary preferences</p>
-          <router-link to="/search" class="action-btn">Search Now</router-link>
+          <router-link
+            to="/search"
+            class="action-btn"
+          >
+            Search Now
+          </router-link>
         </div>
 
         <div class="action-card">
-          <div class="action-icon">❤️</div>
+          <div class="action-icon">
+            ❤️
+          </div>
           <h3>My Favorites</h3>
           <p>Access your saved recipes anytime, anywhere</p>
-          <router-link to="/favorites" class="action-btn">
+          <router-link
+            to="/favorites"
+            class="action-btn"
+          >
             View Favorites
-            <span v-if="favoritesCount > 0" class="count-badge">
+            <span
+              v-if="favoritesCount > 0"
+              class="count-badge"
+            >
               {{ favoritesCount }}
             </span>
           </router-link>
         </div>
 
         <div class="action-card">
-          <div class="action-icon">🍽️</div>
+          <div class="action-icon">
+            🍽️
+          </div>
           <h3>Browse by Cuisine</h3>
           <p>Explore recipes from different cultures and regions</p>
-          <router-link to="/search?cuisine=Italian" class="action-btn"
-            >Browse Cuisines</router-link
+          <router-link
+            to="/search?cuisine=Italian"
+            class="action-btn"
           >
+            Browse Cuisines
+          </router-link>
         </div>
       </div>
     </section>
@@ -77,16 +118,28 @@
     <section class="stats-section">
       <div class="stats-grid">
         <div class="stat-item">
-          <div class="stat-number">{{ recipesCount }}</div>
-          <div class="stat-label">Recipes Available</div>
+          <div class="stat-number">
+            {{ recipesCount }}
+          </div>
+          <div class="stat-label">
+            Recipes Available
+          </div>
         </div>
         <div class="stat-item">
-          <div class="stat-number">{{ favoritesCount }}</div>
-          <div class="stat-label">Your Favorites</div>
+          <div class="stat-number">
+            {{ favoritesCount }}
+          </div>
+          <div class="stat-label">
+            Your Favorites
+          </div>
         </div>
         <div class="stat-item">
-          <div class="stat-number">{{ cuisinesCount }}</div>
-          <div class="stat-label">Different Cuisines</div>
+          <div class="stat-number">
+            {{ cuisinesCount }}
+          </div>
+          <div class="stat-label">
+            Different Cuisines
+          </div>
         </div>
       </div>
     </section>
@@ -120,18 +173,17 @@ export default {
       return cuisines.size;
     },
   },
+  created() {
+    if (this.allRecipes.length === 0) {
+      this.fetchRecipes();
+    }
+  },
   methods: {
     ...mapActions("recipes", ["fetchRecipes"]),
 
     loadRecipes() {
       this.fetchRecipes();
     },
-  },
-  created() {
-    // Fetch recipes if not already loaded
-    if (this.allRecipes.length === 0) {
-      this.fetchRecipes();
-    }
   },
 };
 </script>

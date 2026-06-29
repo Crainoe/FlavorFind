@@ -24,18 +24,31 @@
           Filtered Results
           <span class="results-count">({{ searchResults.length }} found)</span>
         </h2>
-        <h2 v-else>All Recipes</h2>
+        <h2 v-else>
+          All Recipes
+        </h2>
 
-        <div v-if="hasActiveFilters || searchQuery" class="results-actions">
-          <button @click="clearAllSearch" class="clear-all-btn">
+        <div
+          v-if="hasActiveFilters || searchQuery"
+          class="results-actions"
+        >
+          <button
+            class="clear-all-btn"
+            @click="clearAllSearch"
+          >
             Clear All Filters & Search
           </button>
         </div>
       </div>
 
       <!-- Loading State -->
-      <div v-if="isSearching" class="loading-state">
-        <div class="loading-spinner">🔍</div>
+      <div
+        v-if="isSearching"
+        class="loading-state"
+      >
+        <div class="loading-spinner">
+          🔍
+        </div>
         <p>Searching for delicious recipes...</p>
       </div>
 
@@ -46,7 +59,9 @@
         "
         class="no-results"
       >
-        <div class="no-results-icon">😔</div>
+        <div class="no-results-icon">
+          😔
+        </div>
         <h3>No recipes found</h3>
         <p>Try adjusting your search terms or filters to find more recipes.</p>
         <div class="suggestions">
@@ -61,7 +76,10 @@
       </div>
 
       <!-- Results Grid -->
-      <div v-else class="results-grid">
+      <div
+        v-else
+        class="results-grid"
+      >
         <RecipeCard
           v-for="recipe in displayedRecipes"
           :key="recipe.id"
@@ -73,23 +91,31 @@
       <div
         v-if="
           !searchQuery &&
-          !hasActiveFilters &&
-          allRecipes.length > displayedRecipesCount
+            !hasActiveFilters &&
+            allRecipes.length > displayedRecipesCount
         "
         class="load-more"
       >
-        <button @click="loadMoreRecipes" class="load-more-btn">
+        <button
+          class="load-more-btn"
+          @click="loadMoreRecipes"
+        >
           Load More Recipes
         </button>
       </div>
     </div>
 
     <!-- Search Tips -->
-    <div v-if="!searchQuery && !hasActiveFilters" class="search-tips">
+    <div
+      v-if="!searchQuery && !hasActiveFilters"
+      class="search-tips"
+    >
       <h3>Search Tips</h3>
       <div class="tips-grid">
         <div class="tip-card">
-          <div class="tip-icon">🥗</div>
+          <div class="tip-icon">
+            🥗
+          </div>
           <h4>By Ingredients</h4>
           <p>
             Search for "chicken" or "tomatoes" to find recipes using those
@@ -97,19 +123,25 @@
           </p>
         </div>
         <div class="tip-card">
-          <div class="tip-icon">🌍</div>
+          <div class="tip-icon">
+            🌍
+          </div>
           <h4>By Cuisine</h4>
           <p>
             Use filters to explore Italian, Japanese, or Mediterranean cuisines
           </p>
         </div>
         <div class="tip-card">
-          <div class="tip-icon">⏰</div>
+          <div class="tip-icon">
+            ⏰
+          </div>
           <h4>By Time</h4>
           <p>Filter by cooking time to find quick meals or weekend projects</p>
         </div>
         <div class="tip-card">
-          <div class="tip-icon">🥬</div>
+          <div class="tip-icon">
+            🥬
+          </div>
           <h4>By Diet</h4>
           <p>
             Find vegetarian, vegan, or gluten-free recipes that suit your needs
@@ -155,6 +187,18 @@ export default {
       return this.allRecipes.slice(0, this.displayedRecipesCount);
     },
   },
+  mounted() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has("cuisine")) {
+      this.$store.dispatch("search/updateFilter", {
+        filterType: "cuisine",
+        value: urlParams.get("cuisine"),
+      });
+    }
+    if (this.searchQuery || this.hasActiveFilters) {
+      this.performSearch();
+    }
+  },
   methods: {
     ...mapActions("search", ["clearSearch", "clearFilters", "performSearch"]),
 
@@ -166,21 +210,6 @@ export default {
     loadMoreRecipes() {
       this.displayedRecipesCount += 12;
     },
-  },
-  mounted() {
-    // Check for query parameters and set initial search/filters
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has("cuisine")) {
-      this.$store.dispatch("search/updateFilter", {
-        filterType: "cuisine",
-        value: urlParams.get("cuisine"),
-      });
-    }
-
-    // If there's an active search query or filters, perform search
-    if (this.searchQuery || this.hasActiveFilters) {
-      this.performSearch();
-    }
   },
 };
 </script>

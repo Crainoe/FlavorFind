@@ -1,4 +1,5 @@
 import mealService from "@/services/mealService";
+import supabaseService from "@/services/supabaseService";
 import { transformMealsData } from "@/utils/mealTransform";
 
 const state = {
@@ -76,6 +77,48 @@ const actions = {
           // No search query and no cuisine filter - get cached recipes from store
           searchResults = rootGetters["recipes/allRecipes"];
         }
+      }
+
+      // Merge in user-created public recipes
+      try {
+        let userRecipes = [];
+        if (state.searchQuery.trim()) {
+          userRecipes = await supabaseService.searchPublicRecipes(
+            state.searchQuery.trim()
+          );
+        } else {
+          userRecipes = await supabaseService.getPublicRecipes();
+        }
+        if (userRecipes.length > 0) {
+          const transformedUser = userRecipes.map((row) => ({
+            id: row.id,
+            strMeal: row.title,
+            title: row.title,
+            strMealThumb: row.image_url,
+            image: row.image_url,
+            strArea: row.cuisine,
+            cuisine: row.cuisine,
+            strCategory: row.category,
+            category: row.category,
+            description: row.description,
+            cookTime: row.cook_time || 30,
+            servings: row.servings || 2,
+            difficulty: "Medium",
+            dietary: [],
+            ingredients: row.ingredients || [],
+            instructions: row.instructions || [],
+            isUserRecipe: true,
+            userId: row.user_id,
+            createdAt: row.created_at,
+          }));
+          // Avoid duplicates if a user recipe somehow matches
+          const existingIds = new Set(searchResults.map((r) => r.id));
+          const toAdd = transformedUser.filter((r) => !existingIds.has(r.id));
+          searchResults = [...toAdd, ...searchResults];
+        }
+      } catch (err) {
+        // Non-fatal: continue with TheMealDB results only
+        console.warn("Could not load user recipes for search:", err);
       }
 
       // Apply local filters to the API results

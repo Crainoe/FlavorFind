@@ -1,40 +1,68 @@
 <template>
   <div class="recipe-detail">
     <!-- Loading State -->
-    <div v-if="isLoading" class="loading-state">
-      <div class="loading-spinner">🍳</div>
+    <div
+      v-if="pageLoading"
+      class="loading-state"
+    >
+      <div class="loading-spinner">
+        🍳
+      </div>
       <p>Loading recipe details...</p>
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error" class="error-state">
-      <div class="error-icon">😞</div>
+    <div
+      v-else-if="pageError"
+      class="error-state"
+    >
+      <div class="error-icon">
+        😞
+      </div>
       <h2>Recipe Not Found</h2>
-      <p>{{ error }}</p>
-      <router-link to="/" class="back-btn">Back to Home</router-link>
+      <p>{{ pageError }}</p>
+      <router-link
+        to="/"
+        class="back-btn"
+      >
+        Back to Home
+      </router-link>
     </div>
 
     <!-- Recipe Content -->
-    <div v-else-if="currentRecipe" class="recipe-content">
+    <div
+      v-else-if="displayedRecipe"
+      class="recipe-content"
+    >
       <!-- Back Navigation -->
-      <button @click="goBack" class="back-button">← Back</button>
+      <button
+        class="back-button"
+        @click="goBack"
+      >
+        ← Back
+      </button>
 
       <!-- Recipe Header -->
       <div class="recipe-header">
         <div class="recipe-image-section">
           <img
-            :src="currentRecipe.strMealThumb || currentRecipe.image"
-            :alt="currentRecipe.strMeal || currentRecipe.title"
+            :src="displayedRecipe.strMealThumb || displayedRecipe.image"
+            :alt="displayedRecipe.strMeal || displayedRecipe.title"
             class="recipe-image"
             @error="handleImageError"
-          />
+          >
+          <span
+            v-if="isUserRecipe && !displayedRecipe.isPublic"
+            class="private-badge"
+          >🔒 Private</span>
           <button
+            v-if="!isUserRecipe || isAuthenticated"
             class="favorite-toggle"
             :class="{ 'is-favorite': isFavorite }"
-            @click="toggleFavorite"
             :aria-label="
               isFavorite ? 'Remove from favorites' : 'Add to favorites'
             "
+            @click="toggleFavorite"
           >
             <span class="heart-icon">❤️</span>
             {{ isFavorite ? "Remove from Favorites" : "Add to Favorites" }}
@@ -43,14 +71,20 @@
 
         <div class="recipe-info">
           <div class="recipe-badges">
-            <span class="badge cuisine-badge">{{
-              currentRecipe.strArea || currentRecipe.cuisine
-            }}</span>
-            <span v-if="currentRecipe.strCategory" class="badge dietary-badge">
-              {{ currentRecipe.strCategory }}
+            <span
+              v-if="displayedRecipe.strArea || displayedRecipe.cuisine"
+              class="badge cuisine-badge"
+            >
+              {{ displayedRecipe.strArea || displayedRecipe.cuisine }}
             </span>
             <span
-              v-for="dietary in currentRecipe.dietary"
+              v-if="displayedRecipe.strCategory || displayedRecipe.category"
+              class="badge dietary-badge"
+            >
+              {{ displayedRecipe.strCategory || displayedRecipe.category }}
+            </span>
+            <span
+              v-for="dietary in (displayedRecipe.dietary || [])"
               :key="dietary"
               class="badge dietary-badge"
             >
@@ -59,44 +93,61 @@
           </div>
 
           <h1 class="recipe-title">
-            {{ currentRecipe.strMeal || currentRecipe.title }}
+            {{ displayedRecipe.strMeal || displayedRecipe.title }}
           </h1>
           <p class="recipe-description">
             {{
-              currentRecipe.description ||
-              (currentRecipe.strInstructions
-                ? currentRecipe.strInstructions.substring(0, 150) + "..."
-                : "")
+              displayedRecipe.description ||
+                (displayedRecipe.strInstructions
+                  ? displayedRecipe.strInstructions.substring(0, 150) + "..."
+                  : "")
             }}
           </p>
 
           <div class="recipe-meta">
             <div class="meta-group">
-              <div class="meta-item">
+              <div
+                v-if="displayedRecipe.cookTime"
+                class="meta-item"
+              >
                 <span class="meta-icon">⏱️</span>
                 <div>
-                  <div class="meta-label">Cook Time</div>
+                  <div class="meta-label">
+                    Cook Time
+                  </div>
                   <div class="meta-value">
-                    {{ currentRecipe.cookTime }} minutes
+                    {{ displayedRecipe.cookTime }} minutes
                   </div>
                 </div>
               </div>
 
-              <div class="meta-item">
+              <div
+                v-if="displayedRecipe.servings"
+                class="meta-item"
+              >
                 <span class="meta-icon">👥</span>
                 <div>
-                  <div class="meta-label">Servings</div>
+                  <div class="meta-label">
+                    Servings
+                  </div>
                   <div class="meta-value">
-                    {{ currentRecipe.servings }} people
+                    {{ displayedRecipe.servings }} people
                   </div>
                 </div>
               </div>
 
-              <div class="meta-item">
+              <div
+                v-if="displayedRecipe.difficulty && !isUserRecipe"
+                class="meta-item"
+              >
                 <span class="meta-icon">📊</span>
                 <div>
-                  <div class="meta-label">Difficulty</div>
-                  <div class="meta-value">{{ currentRecipe.difficulty }}</div>
+                  <div class="meta-label">
+                    Difficulty
+                  </div>
+                  <div class="meta-value">
+                    {{ displayedRecipe.difficulty }}
+                  </div>
                 </div>
               </div>
             </div>
@@ -110,12 +161,12 @@
           <h2>Ingredients</h2>
           <ul class="ingredients-list">
             <li
-              v-for="(ingredient, index) in currentRecipe.ingredients"
+              v-for="(ingredient, index) in displayedRecipe.ingredients"
               :key="index"
               class="ingredient-item"
             >
               <span class="ingredient-text">{{
-                ingredient.combined || ingredient
+                ingredient.combined || ingredient.name || ingredient
               }}</span>
             </li>
           </ul>
@@ -125,12 +176,16 @@
           <h2>Instructions</h2>
           <ol class="instructions-list">
             <li
-              v-for="(instruction, index) in currentRecipe.instructions"
+              v-for="(instruction, index) in displayedRecipe.instructions"
               :key="index"
               class="instruction-item"
             >
-              <div class="step-number">{{ index + 1 }}</div>
-              <div class="step-text">{{ instruction }}</div>
+              <div class="step-number">
+                {{ index + 1 }}
+              </div>
+              <div class="step-text">
+                {{ instruction }}
+              </div>
             </li>
           </ol>
         </div>
@@ -138,13 +193,29 @@
 
       <!-- Recipe Actions -->
       <div class="recipe-actions">
-        <button class="action-btn secondary" @click="printRecipe">
+        <button
+          class="action-btn secondary"
+          @click="printRecipe"
+        >
           🖨️ Print Recipe
         </button>
-        <button class="action-btn secondary" @click="shareRecipe">
+        <button
+          class="action-btn secondary"
+          @click="shareRecipe"
+        >
           📤 Share Recipe
         </button>
-        <router-link to="/search" class="action-btn primary">
+        <button
+          v-if="isOwner"
+          class="action-btn danger"
+          @click="handleDelete"
+        >
+          🗑️ Delete
+        </button>
+        <router-link
+          to="/search"
+          class="action-btn primary"
+        >
           🔍 Find More Recipes
         </router-link>
       </div>
@@ -155,37 +226,117 @@
 <script>
 import { mapGetters, mapActions } from "vuex";
 
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export default {
   name: "RecipeDetail",
+  beforeRouteUpdate(to, from, next) {
+    if (to.params.id !== from.params.id) {
+      this.isUserRecipe = this.isUuid(to.params.id);
+      if (this.isUserRecipe) {
+        this.clearCurrentRecipe();
+        this.fetchUserRecipeById(to.params.id).then(() => next());
+      } else {
+        this.clearCurrentUserRecipe();
+        this.fetchRecipeById(to.params.id).then(() => next());
+      }
+      return;
+    }
+    next();
+  },
+  data() {
+    return {
+      isUserRecipe: false,
+    };
+  },
   computed: {
     ...mapGetters("recipes", ["currentRecipe", "isLoading", "error"]),
+    ...mapGetters("userRecipes", [
+      "currentUserRecipe",
+      "loading: loading",
+    ]),
+    ...mapGetters("auth", ["isAuthenticated", "userId"]),
     ...mapGetters("favorites", ["isFavorite"]),
 
-    isFavorite() {
-      return this.currentRecipe
-        ? this.$store.getters["favorites/isFavorite"](
-            this.currentRecipe.id || this.currentRecipe.idMeal
-          )
-        : false;
+    displayedRecipe() {
+      return this.isUserRecipe ? this.currentUserRecipe : this.currentRecipe;
     },
+
+    isFavorite() {
+      const r = this.displayedRecipe;
+      if (!r) return false;
+      return this.$store.getters["favorites/isFavorite"](r.id || r.idMeal);
+    },
+
+    isOwner() {
+      const r = this.displayedRecipe;
+      return r && r.userId === this.userId;
+    },
+
+    pageLoading() {
+      return this.isUserRecipe
+        ? this.$store.getters["userRecipes/loading"]
+        : this.isLoading;
+    },
+
+    pageError() {
+      return this.isUserRecipe
+        ? this.$store.getters["userRecipes/error"]
+        : this.error;
+    },
+  },
+  async created() {
+    await this.loadRecipe();
+  },
+  beforeUnmount() {
+    this.clearCurrentRecipe();
+    this.clearCurrentUserRecipe();
   },
   methods: {
     ...mapActions("recipes", ["fetchRecipeById", "clearCurrentRecipe"]),
+    ...mapActions("userRecipes", [
+      "fetchUserRecipeById",
+      "clearCurrentUserRecipe",
+      "deleteRecipe",
+    ]),
     ...mapActions("favorites", ["addToFavorites", "removeFromFavorites"]),
+
+    isUuid(value) {
+      return typeof value === "string" && UUID_REGEX.test(value);
+    },
 
     async loadRecipe() {
       const recipeId = this.$route.params.id;
-      await this.fetchRecipeById(recipeId);
+      this.isUserRecipe = this.isUuid(recipeId);
+
+      if (this.isUserRecipe) {
+        this.clearCurrentRecipe();
+        await this.fetchUserRecipeById(recipeId);
+      } else {
+        this.clearCurrentUserRecipe();
+        await this.fetchRecipeById(recipeId);
+      }
     },
 
     toggleFavorite() {
-      if (this.currentRecipe) {
-        const recipeId = this.currentRecipe.id || this.currentRecipe.idMeal;
-        if (this.isFavorite) {
-          this.removeFromFavorites(recipeId);
-        } else {
-          this.addToFavorites(this.currentRecipe);
-        }
+      const r = this.displayedRecipe;
+      if (!r) return;
+      const recipeId = r.id || r.idMeal;
+      if (this.isFavorite) {
+        this.removeFromFavorites(recipeId);
+      } else {
+        this.addToFavorites(r);
+      }
+    },
+
+    async handleDelete() {
+      if (!confirm(`Delete "${this.displayedRecipe.title}"?`)) return;
+      try {
+        await this.deleteRecipe(this.displayedRecipe.id);
+        this.$router.push("/recipes");
+      } catch (err) {
+        alert("Could not delete: " + err.message);
       }
     },
 
@@ -203,33 +354,17 @@ export default {
     },
 
     shareRecipe() {
-      if (navigator.share && this.currentRecipe) {
+      if (navigator.share && this.displayedRecipe) {
         navigator.share({
-          title: this.currentRecipe.title,
-          text: this.currentRecipe.description,
+          title: this.displayedRecipe.title,
+          text: this.displayedRecipe.description,
           url: window.location.href,
         });
       } else {
-        // Fallback: copy URL to clipboard
         navigator.clipboard.writeText(window.location.href);
         alert("Recipe URL copied to clipboard!");
       }
     },
-  },
-
-  async created() {
-    await this.loadRecipe();
-  },
-
-  async beforeRouteUpdate(to, from, next) {
-    if (to.params.id !== from.params.id) {
-      await this.loadRecipe();
-    }
-    next();
-  },
-
-  beforeUnmount() {
-    this.clearCurrentRecipe();
   },
 };
 </script>
@@ -531,6 +666,29 @@ export default {
   background: white;
   color: #4a5568;
   border: 2px solid #e2e8f0;
+}
+
+.action-btn.danger {
+  background: white;
+  color: #dc2626;
+  border: 2px solid #fecaca;
+}
+
+.action-btn.danger:hover {
+  background: #fee2e2;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+}
+
+.private-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(0, 0, 0, 0.75);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
 .action-btn:hover {
