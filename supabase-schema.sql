@@ -18,9 +18,11 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Users can view and update their own profile
+DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
 CREATE POLICY "Users can view own profile" ON public.profiles
     FOR SELECT USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
 CREATE POLICY "Users can update own profile" ON public.profiles
     FOR UPDATE USING (auth.uid() = id);
 
@@ -40,12 +42,15 @@ CREATE TABLE IF NOT EXISTS public.favorites (
 ALTER TABLE public.favorites ENABLE ROW LEVEL SECURITY;
 
 -- Policies: Users can only manage their own favorites
+DROP POLICY IF EXISTS "Users can view own favorites" ON public.favorites;
 CREATE POLICY "Users can view own favorites" ON public.favorites
     FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert own favorites" ON public.favorites;
 CREATE POLICY "Users can insert own favorites" ON public.favorites
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own favorites" ON public.favorites;
 CREATE POLICY "Users can delete own favorites" ON public.favorites
     FOR DELETE USING (auth.uid() = user_id);
 
@@ -136,19 +141,24 @@ CREATE TABLE IF NOT EXISTS public.recipes (
 ALTER TABLE public.recipes ENABLE ROW LEVEL SECURITY;
 
 -- Policies: anyone can read public recipes, owners can read their own (public or private)
+DROP POLICY IF EXISTS "Anyone can view public recipes" ON public.recipes;
 CREATE POLICY "Anyone can view public recipes" ON public.recipes
     FOR SELECT USING (is_public = true);
 
+DROP POLICY IF EXISTS "Users can view own recipes" ON public.recipes;
 CREATE POLICY "Users can view own recipes" ON public.recipes
     FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert own recipes" ON public.recipes;
 CREATE POLICY "Users can insert own recipes" ON public.recipes
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own recipes" ON public.recipes;
 CREATE POLICY "Users can update own recipes" ON public.recipes
     FOR UPDATE USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own recipes" ON public.recipes;
 CREATE POLICY "Users can delete own recipes" ON public.recipes
     FOR DELETE USING (auth.uid() = user_id);
 
@@ -173,12 +183,14 @@ GRANT ALL ON public.recipes TO authenticated;
 -- Then run these policies:
 
 -- Public read access for recipe images
+DROP POLICY IF EXISTS "Public read access for recipe images" ON storage.objects;
 CREATE POLICY "Public read access for recipe images"
     ON storage.objects FOR SELECT
     USING (bucket_id = 'recipe-images');
 
 -- Authenticated users can upload to their own folder
 -- Files should be stored as: {user_id}/{filename}
+DROP POLICY IF EXISTS "Users can upload own recipe images" ON storage.objects;
 CREATE POLICY "Users can upload own recipe images"
     ON storage.objects FOR INSERT
     TO authenticated
@@ -188,6 +200,7 @@ CREATE POLICY "Users can upload own recipe images"
     );
 
 -- Users can update their own images
+DROP POLICY IF EXISTS "Users can update own recipe images" ON storage.objects;
 CREATE POLICY "Users can update own recipe images"
     ON storage.objects FOR UPDATE
     TO authenticated
@@ -201,6 +214,7 @@ CREATE POLICY "Users can update own recipe images"
     );
 
 -- Users can delete their own images
+DROP POLICY IF EXISTS "Users can delete own recipe images" ON storage.objects;
 CREATE POLICY "Users can delete own recipe images"
     ON storage.objects FOR DELETE
     TO authenticated
