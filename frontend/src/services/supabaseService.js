@@ -321,13 +321,15 @@ class SupabaseService {
     }
   }
 
-  async getPublicRecipes() {
+  async getPublicRecipes({ page = 0, pageSize = 24 } = {}) {
     try {
       const { data, error } = await supabase
         .from("recipes")
-        .select("*")
+        .select("id,user_id,title,description,cuisine,category,cook_time,servings,image_url,is_public,created_at")
         .eq("is_public", true)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: true })
+        .range(page * pageSize, (page + 1) * pageSize - 1);
 
       if (error) throw error;
       return data || [];
@@ -337,16 +339,18 @@ class SupabaseService {
     }
   }
 
-  async searchPublicRecipes(query) {
+  async searchPublicRecipes(query, { page = 0, pageSize = 24 } = {}) {
     try {
       const { data, error } = await supabase
         .from("recipes")
-        .select("*")
+        .select("id,user_id,title,description,cuisine,category,cook_time,servings,image_url,is_public,created_at")
         .eq("is_public", true)
         .or(
           `title.ilike.%${query}%,description.ilike.%${query}%,cuisine.ilike.%${query}%`
         )
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: true })
+        .range(page * pageSize, (page + 1) * pageSize - 1);
 
       if (error) throw error;
       return data || [];

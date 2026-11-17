@@ -25,7 +25,7 @@
     <button
       v-if="showClearButton"
       class="clear-button"
-      @click="clearSearch"
+      @click="clearQuery"
     >
       Clear
     </button>
@@ -71,24 +71,28 @@ export default {
     ]),
 
     handleInput() {
-      this.updateSearchQuery(this.localQuery);
       clearTimeout(this.searchTimeout);
+      if (!this.localQuery.trim()) {
+        this.clearSearch();
+        return;
+      }
+      this.updateSearchQuery(this.localQuery);
       this.searchTimeout = setTimeout(() => {
-        if (this.localQuery.trim()) {
-          this.handleSearch();
-        }
+        this.handleSearch();
       }, 500);
     },
 
     handleSearch() {
+      clearTimeout(this.searchTimeout);
       if (this.localQuery.trim()) {
         this.updateSearchQuery(this.localQuery);
         this.performSearch();
       }
     },
 
-    clearSearch() {
+    clearQuery() {
       this.localQuery = "";
+      clearTimeout(this.searchTimeout);
       this.clearSearch();
     },
   },

@@ -90,6 +90,16 @@ const actions = {
       if (!recipeId) throw new Error("Recipe is missing an ID");
 
       const user = rootGetters["auth/user"];
+      if (recipe.isUserRecipe && !recipe.ingredients) {
+        const fullRecipe = await supabaseService.getRecipeById(recipe.id, user?.id || null);
+        if (fullRecipe) {
+          recipe = {
+            ...recipe,
+            ingredients: fullRecipe.ingredients || [],
+            instructions: fullRecipe.instructions || [],
+          };
+        }
+      }
       if (!user) {
         // Fallback to localStorage if no user
         const localFavorites = JSON.parse(

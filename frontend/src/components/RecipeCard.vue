@@ -8,6 +8,8 @@
         :src="recipe.strMealThumb || recipe.image"
         :alt="recipe.strMeal || recipe.title"
         class="recipe-image"
+        loading="lazy"
+        decoding="async"
         @error="handleImageError"
       >
       <button

@@ -23,7 +23,7 @@
     </div>
 
     <div
-      v-else-if="error"
+      v-else-if="error && publicRecipes.length === 0"
       class="error-state"
     >
       <div class="error-icon">
@@ -74,6 +74,16 @@
         :recipe="recipe"
       />
     </div>
+    <p v-if="error && publicRecipes.length">
+      {{ error }}
+    </p>
+    <button
+      v-if="publicRecipes.length && hasMorePublicRecipes && !loading"
+      class="retry-btn"
+      @click="fetchMorePublicRecipes"
+    >
+      Load more recipes
+    </button>
   </div>
 </template>
 
@@ -85,14 +95,14 @@ export default {
   name: "Recipes",
   components: { UserRecipeCard },
   computed: {
-    ...mapGetters("userRecipes", ["publicRecipes", "loading", "error"]),
+    ...mapGetters("userRecipes", ["publicRecipes", "hasMorePublicRecipes", "loading", "error"]),
     ...mapGetters("auth", ["isAuthenticated"]),
   },
   async mounted() {
     await this.loadRecipes();
   },
   methods: {
-    ...mapActions("userRecipes", ["fetchPublicRecipes"]),
+    ...mapActions("userRecipes", ["fetchPublicRecipes", "fetchMorePublicRecipes"]),
     async loadRecipes() {
       await this.fetchPublicRecipes();
     },

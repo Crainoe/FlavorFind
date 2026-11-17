@@ -1,8 +1,13 @@
 import supabaseService from "../../services/supabaseService.js";
 
+const PUBLIC_PAGE_SIZE = 24;
+
 const state = {
   userRecipes: [],
   publicRecipes: [],
+  publicRecipesLoaded: false,
+  publicPage: 0,
+  hasMorePublicRecipes: true,
   currentUserRecipe: null,
   loading: false,
   uploading: false,
@@ -15,6 +20,15 @@ const mutations = {
   },
   SET_PUBLIC_RECIPES(state, recipes) {
     state.publicRecipes = recipes;
+  },
+  SET_PUBLIC_RECIPES_LOADED(state, loaded) {
+    state.publicRecipesLoaded = loaded;
+  },
+  SET_PUBLIC_PAGE(state, page) {
+    state.publicPage = page;
+  },
+  SET_HAS_MORE_PUBLIC_RECIPES(state, hasMore) {
+    state.hasMorePublicRecipes = hasMore;
   },
   SET_CURRENT_USER_RECIPE(state, recipe) {
     state.currentUserRecipe = recipe;
@@ -83,18 +97,49 @@ const actions = {
   },
 
   async fetchPublicRecipes({ commit, state }) {
-    if (state.publicRecipes.length > 0) return state.publicRecipes;
+    if (state.publicRecipesLoaded) return state.publicRecipes;
 
     commit("SET_LOADING", true);
     commit("CLEAR_ERROR");
 
     try {
-      const recipes = await supabaseService.getPublicRecipes();
+      const recipes = await supabaseService.getPublicRecipes({ pageSize: PUBLIC_PAGE_SIZE });
       const transformed = recipes.map(transformRecipe);
       commit("SET_PUBLIC_RECIPES", transformed);
+      commit("SET_PUBLIC_RECIPES_LOADED", true);
+      commit("SET_PUBLIC_PAGE", 0);
+      commit("SET_HAS_MORE_PUBLIC_RECIPES", recipes.length === PUBLIC_PAGE_SIZE);
       return transformed;
     } catch (error) {
       console.error("Error fetching public recipes:", error);
+      commit("SET_ERROR", error.message);
+      return [];
+    } finally {
+      commit("SET_LOADING", false);
+    }
+  },
+
+  async fetchMorePublicRecipes({ commit, state }) {
+    if (state.loading || !state.hasMorePublicRecipes) return [];
+    commit("SET_LOADING", true);
+    commit("CLEAR_ERROR");
+    try {
+      const nextPage = state.publicPage + 1;
+      const recipes = await supabaseService.getPublicRecipes({
+        page: nextPage,
+        pageSize: PUBLIC_PAGE_SIZE,
+      });
+      const transformed = recipes.map(transformRecipe);
+      const existingIds = new Set(state.publicRecipes.map((recipe) => recipe.id));
+      commit("SET_PUBLIC_RECIPES", [
+        ...state.publicRecipes,
+        ...transformed.filter((recipe) => !existingIds.has(recipe.id)),
+      ]);
+      commit("SET_PUBLIC_PAGE", nextPage);
+      commit("SET_HAS_MORE_PUBLIC_RECIPES", recipes.length === PUBLIC_PAGE_SIZE);
+      return transformed;
+    } catch (error) {
+      console.error("Error fetching more public recipes:", error);
       commit("SET_ERROR", error.message);
       return [];
     } finally {
@@ -124,7 +169,7 @@ const actions = {
     }
   },
 
-  async createRecipe({ commit, rootGetters }, { recipe, imageFile }) {
+  async createRecipe({ commit, rootGetters, state }, { recipe, imageFile }) {
     const user = rootGetters["auth/user"];
     if (!user) throw new Error("You must be signed in to create a recipe.");
 
@@ -197,6 +242,7 @@ const actions = {
 const getters = {
   userRecipes: (state) => state.userRecipes,
   publicRecipes: (state) => state.publicRecipes,
+  hasMorePublicRecipes: (state) => state.hasMorePublicRecipes,
   currentUserRecipe: (state) => state.currentUserRecipe,
   loading: (state) => state.loading,
   uploading: (state) => state.uploading,

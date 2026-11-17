@@ -1,17 +1,11 @@
 import { createRouter, createWebHistory } from "vue-router";
-import Home from "@/views/Home.vue";
-import RecipeDetail from "@/views/RecipeDetail.vue";
-import Favorites from "@/views/Favorites.vue";
-import Search from "@/views/Search.vue";
-import Recipes from "@/views/Recipes.vue";
-import RecipeForm from "@/components/RecipeForm.vue";
 import store from "@/store";
 
 const routes = [
   {
     path: "/",
     name: "Home",
-    component: Home,
+    component: () => import("@/views/Home.vue"),
     meta: {
       title: "Flavor Find - Discover Delicious Recipes",
     },
@@ -19,7 +13,7 @@ const routes = [
   {
     path: "/recipe/:id",
     name: "RecipeDetail",
-    component: RecipeDetail,
+    component: () => import("@/views/RecipeDetail.vue"),
     meta: {
       title: "Recipe Details - Recipe Explorer",
     },
@@ -27,7 +21,7 @@ const routes = [
   {
     path: "/favorites",
     name: "Favorites",
-    component: Favorites,
+    component: () => import("@/views/Favorites.vue"),
     meta: {
       title: "Your Favorites - Recipe Explorer",
     },
@@ -35,7 +29,7 @@ const routes = [
   {
     path: "/search",
     name: "Search",
-    component: Search,
+    component: () => import("@/views/Search.vue"),
     meta: {
       title: "Search Recipes - Recipe Explorer",
     },
@@ -43,7 +37,7 @@ const routes = [
   {
     path: "/recipes",
     name: "Recipes",
-    component: Recipes,
+    component: () => import("@/views/Recipes.vue"),
     meta: {
       title: "Community Recipes - FlavorFind",
     },
@@ -51,7 +45,7 @@ const routes = [
   {
     path: "/recipes/new",
     name: "RecipeNew",
-    component: RecipeForm,
+    component: () => import("@/components/RecipeForm.vue"),
     meta: {
       title: "Create Recipe - FlavorFind",
       requiresAuth: true,

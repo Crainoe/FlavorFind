@@ -1,6 +1,8 @@
 import mealService from "@/services/mealService";
 import { transformMealsData } from "@/utils/mealTransform";
 
+let pendingRecipesRequest = null;
+
 const state = {
   allRecipes: [],
   currentRecipe: null,
@@ -54,7 +56,7 @@ const mutations = {
 };
 
 const actions = {
-  async fetchRecipes({ commit, state }) {
+  fetchRecipes({ commit, state }) {
     if (state.allRecipes.length > 0 && state.lastUpdated) {
       const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
       const lastUpdate = new Date(state.lastUpdated);
@@ -63,22 +65,26 @@ const actions = {
       }
     }
 
+    if (pendingRecipesRequest) return pendingRecipesRequest;
+
     commit("SET_LOADING", true);
     commit("CLEAR_ERROR");
-
-    try {
-      const rawMeals = await mealService.getRandomMeals(12);
-      const transformedRecipes = transformMealsData(rawMeals);
-
-      commit("SET_RECIPES", transformedRecipes);
-      return transformedRecipes;
-    } catch (error) {
-      console.error("Error fetching recipes:", error);
-      commit("SET_ERROR", "Failed to load recipes. Please try again later.");
-      return [];
-    } finally {
-      commit("SET_LOADING", false);
-    }
+    pendingRecipesRequest = (async () => {
+      try {
+        const rawMeals = await mealService.getRandomMeals(12);
+        const transformedRecipes = transformMealsData(rawMeals);
+        commit("SET_RECIPES", transformedRecipes);
+        return transformedRecipes;
+      } catch (error) {
+        console.error("Error fetching recipes:", error);
+        commit("SET_ERROR", "Failed to load recipes. Please try again later.");
+        return [];
+      } finally {
+        commit("SET_LOADING", false);
+        pendingRecipesRequest = null;
+      }
+    })();
+    return pendingRecipesRequest;
   },
 
   async fetchMoreRecipes({ commit }, count = 6) {

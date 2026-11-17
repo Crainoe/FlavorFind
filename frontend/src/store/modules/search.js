@@ -2,9 +2,35 @@ import mealService from "@/services/mealService";
 import supabaseService from "@/services/supabaseService";
 import { transformMealsData } from "@/utils/mealTransform";
 
+let latestSearchId = 0;
+const PUBLIC_PAGE_SIZE = 24;
+
+const transformPublicRecipe = (row) => ({
+  id: row.id,
+  strMeal: row.title,
+  title: row.title,
+  strMealThumb: row.image_url,
+  image: row.image_url,
+  strArea: row.cuisine,
+  cuisine: row.cuisine,
+  strCategory: row.category,
+  category: row.category,
+  description: row.description,
+  cookTime: row.cook_time || 30,
+  servings: row.servings || 2,
+  difficulty: "Medium",
+  dietary: [],
+  isUserRecipe: true,
+  userId: row.user_id,
+  createdAt: row.created_at,
+});
+
 const state = {
   searchQuery: "",
   searchResults: [],
+  hasLoadedResults: false,
+  publicPage: 0,
+  hasMorePublicResults: false,
   filters: {
     cuisine: "",
     dietary: "",
@@ -22,6 +48,18 @@ const mutations = {
 
   SET_SEARCH_RESULTS(state, results) {
     state.searchResults = results;
+    state.hasLoadedResults = true;
+  },
+  RESET_SEARCH_RESULTS(state) {
+    state.searchResults = [];
+    state.hasLoadedResults = false;
+    state.hasMorePublicResults = false;
+  },
+  SET_PUBLIC_PAGE(state, page) {
+    state.publicPage = page;
+  },
+  SET_HAS_MORE_PUBLIC_RESULTS(state, hasMore) {
+    state.hasMorePublicResults = hasMore;
   },
 
   SET_FILTER(state, { filterType, value }) {
@@ -51,27 +89,39 @@ const mutations = {
 };
 
 const actions = {
-  updateSearchQuery({ commit }, query) {
+  updateSearchQuery({ commit, state }, query) {
+    if (state.searchQuery !== query) {
+      ++latestSearchId;
+      commit("SET_IS_SEARCHING", false);
+    }
     commit("SET_SEARCH_QUERY", query);
   },
 
   async performSearch({ commit, state, rootGetters }) {
+    const searchId = ++latestSearchId;
+    const query = state.searchQuery.trim();
+    const cuisine = state.filters.cuisine;
     commit("SET_IS_SEARCHING", true);
     commit("CLEAR_ERROR");
 
     try {
       let searchResults = [];
+      const publicRequest = (query
+        ? supabaseService.searchPublicRecipes(query, { pageSize: PUBLIC_PAGE_SIZE })
+        : supabaseService.getPublicRecipes({ pageSize: PUBLIC_PAGE_SIZE })
+      ).catch((error) => {
+        console.warn("Could not load user recipes for search:", error);
+        return [];
+      });
 
       // If there's a text search query, use API search
-      if (state.searchQuery.trim()) {
-        const rawMeals = await mealService.searchMeals(state.searchQuery);
+      if (query) {
+        const rawMeals = await mealService.searchMeals(query);
         searchResults = transformMealsData(rawMeals);
       } else {
         // If no text query but filters are applied, get recipes by category/area
-        if (state.filters.cuisine) {
-          const rawMeals = await mealService.getMealsByArea(
-            state.filters.cuisine
-          );
+        if (cuisine) {
+          const rawMeals = await mealService.getMealsByArea(cuisine);
           searchResults = transformMealsData(rawMeals);
         } else {
           // No search query and no cuisine filter - get cached recipes from store
@@ -79,83 +129,54 @@ const actions = {
         }
       }
 
-      // Merge in user-created public recipes
-      try {
-        let userRecipes = [];
-        if (state.searchQuery.trim()) {
-          userRecipes = await supabaseService.searchPublicRecipes(
-            state.searchQuery.trim()
-          );
-        } else {
-          userRecipes = await supabaseService.getPublicRecipes();
-        }
-        if (userRecipes.length > 0) {
-          const transformedUser = userRecipes.map((row) => ({
-            id: row.id,
-            strMeal: row.title,
-            title: row.title,
-            strMealThumb: row.image_url,
-            image: row.image_url,
-            strArea: row.cuisine,
-            cuisine: row.cuisine,
-            strCategory: row.category,
-            category: row.category,
-            description: row.description,
-            cookTime: row.cook_time || 30,
-            servings: row.servings || 2,
-            difficulty: "Medium",
-            dietary: [],
-            ingredients: row.ingredients || [],
-            instructions: row.instructions || [],
-            isUserRecipe: true,
-            userId: row.user_id,
-            createdAt: row.created_at,
-          }));
-          // Avoid duplicates if a user recipe somehow matches
-          const existingIds = new Set(searchResults.map((r) => r.id));
-          const toAdd = transformedUser.filter((r) => !existingIds.has(r.id));
-          searchResults = [...toAdd, ...searchResults];
-        }
-      } catch (err) {
-        // Non-fatal: continue with TheMealDB results only
-        console.warn("Could not load user recipes for search:", err);
+      const userRecipes = await publicRequest;
+      if (userRecipes.length > 0) {
+        const existingIds = new Set(searchResults.map((recipe) => recipe.id));
+        const toAdd = userRecipes
+          .map(transformPublicRecipe)
+          .filter((recipe) => !existingIds.has(recipe.id));
+        searchResults = [...toAdd, ...searchResults];
       }
 
-      // Apply local filters to the API results
-      let filteredRecipes = searchResults;
-
-      // Apply dietary filter (this needs to be done locally as API doesn't support it)
-      if (state.filters.dietary) {
-        filteredRecipes = filteredRecipes.filter((recipe) =>
-          recipe.dietary.some(
-            (d) => d.toLowerCase() === state.filters.dietary.toLowerCase()
-          )
-        );
+      if (searchId === latestSearchId) {
+        commit("SET_SEARCH_RESULTS", searchResults);
+        commit("SET_PUBLIC_PAGE", 0);
+        commit("SET_HAS_MORE_PUBLIC_RESULTS", userRecipes.length === PUBLIC_PAGE_SIZE);
       }
-
-      // Apply difficulty filter
-      if (state.filters.difficulty) {
-        filteredRecipes = filteredRecipes.filter(
-          (recipe) =>
-            recipe.difficulty.toLowerCase() ===
-            state.filters.difficulty.toLowerCase()
-        );
-      }
-
-      // Apply max cook time filter
-      if (state.filters.maxCookTime) {
-        filteredRecipes = filteredRecipes.filter(
-          (recipe) => recipe.cookTime <= state.filters.maxCookTime
-        );
-      }
-
-      commit("SET_SEARCH_RESULTS", filteredRecipes);
     } catch (error) {
-      console.error("Search error:", error);
-      commit("SET_ERROR", "Failed to search recipes. Please try again.");
-      commit("SET_SEARCH_RESULTS", []);
+      if (searchId === latestSearchId) {
+        console.error("Search error:", error);
+        commit("SET_ERROR", "Failed to search recipes. Please try again.");
+        commit("SET_SEARCH_RESULTS", []);
+        commit("SET_HAS_MORE_PUBLIC_RESULTS", false);
+      }
     } finally {
-      commit("SET_IS_SEARCHING", false);
+      if (searchId === latestSearchId) commit("SET_IS_SEARCHING", false);
+    }
+  },
+
+  async loadMorePublicResults({ commit, state }) {
+    if (state.isSearching || !state.hasMorePublicResults) return [];
+    const searchId = latestSearchId;
+    const query = state.searchQuery.trim();
+    const nextPage = state.publicPage + 1;
+    commit("SET_IS_SEARCHING", true);
+    try {
+      const rows = query
+        ? await supabaseService.searchPublicRecipes(query, { page: nextPage, pageSize: PUBLIC_PAGE_SIZE })
+        : await supabaseService.getPublicRecipes({ page: nextPage, pageSize: PUBLIC_PAGE_SIZE });
+      if (searchId !== latestSearchId) return [];
+      const existingIds = new Set(state.searchResults.map((recipe) => recipe.id));
+      const toAdd = rows.map(transformPublicRecipe).filter((recipe) => !existingIds.has(recipe.id));
+      commit("SET_SEARCH_RESULTS", [...state.searchResults, ...toAdd]);
+      commit("SET_PUBLIC_PAGE", nextPage);
+      commit("SET_HAS_MORE_PUBLIC_RESULTS", rows.length === PUBLIC_PAGE_SIZE);
+      return toAdd;
+    } catch {
+      if (searchId === latestSearchId) commit("SET_ERROR", "Failed to load more recipes.");
+      return [];
+    } finally {
+      if (searchId === latestSearchId) commit("SET_IS_SEARCHING", false);
     }
   },
 
@@ -199,20 +220,40 @@ const actions = {
     }
   },
 
-  updateFilter({ commit, dispatch }, { filterType, value }) {
+  updateFilter({ commit, dispatch, state }, { filterType, value }) {
+    const sourceChanged = filterType === "cuisine" && state.filters.cuisine !== value;
     commit("SET_FILTER", { filterType, value });
-    dispatch("performSearch");
+    const hasFilters = Object.values(state.filters).some((filter) => filter !== "" && filter !== null);
+    if (!state.searchQuery.trim() && !hasFilters) {
+      ++latestSearchId;
+      commit("RESET_SEARCH_RESULTS");
+      commit("SET_IS_SEARCHING", false);
+      return;
+    }
+    if ((!state.searchQuery.trim() && sourceChanged) || !state.hasLoadedResults) {
+      return dispatch("performSearch");
+    }
   },
 
-  clearFilters({ commit, dispatch }) {
+  clearFilters({ commit, state }) {
+    const hadCuisine = !!state.filters.cuisine;
     commit("CLEAR_FILTERS");
-    dispatch("performSearch");
+    if (hadCuisine && !state.searchQuery.trim()) {
+      ++latestSearchId;
+      commit("RESET_SEARCH_RESULTS");
+      commit("SET_IS_SEARCHING", false);
+    }
   },
 
-  clearSearch({ commit }) {
+  clearSearch({ commit, dispatch, state }) {
+    ++latestSearchId;
     commit("SET_SEARCH_QUERY", "");
-    commit("SET_SEARCH_RESULTS", []);
+    commit("RESET_SEARCH_RESULTS");
+    commit("SET_IS_SEARCHING", false);
     commit("CLEAR_ERROR");
+    if (Object.values(state.filters).some((value) => value !== "" && value !== null)) {
+      return dispatch("performSearch");
+    }
   },
 
   clearError({ commit }) {
@@ -222,9 +263,18 @@ const actions = {
 
 const getters = {
   searchQuery: (state) => state.searchQuery,
-  searchResults: (state) => state.searchResults,
+  searchResults: (state) => {
+    const { cuisine, dietary, difficulty, maxCookTime } = state.filters;
+    return state.searchResults.filter((recipe) =>
+      (!cuisine || state.searchQuery.trim() || !recipe.isUserRecipe || recipe.cuisine === cuisine) &&
+      (!dietary || recipe.dietary?.some((tag) => tag.toLowerCase() === dietary.toLowerCase())) &&
+      (!difficulty || recipe.difficulty?.toLowerCase() === difficulty.toLowerCase()) &&
+      (!maxCookTime || recipe.cookTime <= maxCookTime)
+    );
+  },
   filters: (state) => state.filters,
   isSearching: (state) => state.isSearching,
+  hasMorePublicResults: (state) => state.hasMorePublicResults,
   error: (state) => state.error,
   hasActiveFilters: (state) => {
     return Object.values(state.filters).some(

@@ -173,11 +173,6 @@ export default {
       return cuisines.size;
     },
   },
-  created() {
-    if (this.allRecipes.length === 0) {
-      this.fetchRecipes();
-    }
-  },
   methods: {
     ...mapActions("recipes", ["fetchRecipes"]),
 

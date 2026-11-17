@@ -6,15 +6,19 @@ const mealService = {
   async getRandomMeals(count = 6) {
     try {
       const meals = [];
-      for (let i = 0; i < count; i++) {
+      const fetchRandomMeal = async () => {
         const response = await fetch(`${BASE_URL}/random.php`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
-        if (data.meals && data.meals[0]) {
-          meals.push(data.meals[0]);
-        }
+        return data.meals?.[0] || null;
+      };
+
+      // Bound concurrency so a page load does not send every request at once.
+      for (let i = 0; i < count; i += 4) {
+        const batch = await Promise.all(
+          Array.from({ length: Math.min(4, count - i) }, fetchRandomMeal)
+        );
+        meals.push(...batch.filter(Boolean));
       }
       return meals;
     } catch (error) {

@@ -209,15 +209,15 @@ export default {
     this.localFilters = { ...this.filters };
   },
   methods: {
-    ...mapActions("search", ["updateFilter", "clearFilters"]),
+    ...mapActions("search", { dispatchFilter: "updateFilter", clearFilters: "clearFilters" }),
 
     updateFilter(filterType, value) {
-      this.updateFilter({ filterType, value });
+      this.dispatchFilter({ filterType, value });
     },
 
     removeFilter(filterType) {
       this.localFilters[filterType] = filterType === "maxCookTime" ? null : "";
-      this.updateFilter({ filterType, value: this.localFilters[filterType] });
+      this.dispatchFilter({ filterType, value: this.localFilters[filterType] });
     },
 
     clearAllFilters() {

@@ -8,6 +8,8 @@
         :src="recipe.strMealThumb || recipe.image || defaultImage"
         :alt="recipe.strMeal || recipe.title"
         class="recipe-image"
+        loading="lazy"
+        decoding="async"
         @error="handleImageError"
       >
       <span

@@ -87,6 +87,18 @@
         />
       </div>
 
+      <div
+        v-if="(searchQuery || hasActiveFilters) && hasMorePublicResults && !isSearching"
+        class="load-more"
+      >
+        <button
+          class="load-more-btn"
+          @click="loadMorePublicResults"
+        >
+          Load more community recipes
+        </button>
+      </div>
+
       <!-- Load More Button (if showing all recipes) -->
       <div
         v-if="
@@ -176,6 +188,7 @@ export default {
       "searchResults",
       "hasActiveFilters",
       "isSearching",
+      "hasMorePublicResults",
     ]),
     ...mapGetters("recipes", ["allRecipes"]),
 
@@ -190,7 +203,7 @@ export default {
   mounted() {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has("cuisine")) {
-      this.$store.dispatch("search/updateFilter", {
+      this.$store.commit("search/SET_FILTER", {
         filterType: "cuisine",
         value: urlParams.get("cuisine"),
       });
@@ -200,11 +213,11 @@ export default {
     }
   },
   methods: {
-    ...mapActions("search", ["clearSearch", "clearFilters", "performSearch"]),
+    ...mapActions("search", ["clearSearch", "clearFilters", "performSearch", "loadMorePublicResults"]),
 
     clearAllSearch() {
-      this.clearSearch();
       this.clearFilters();
+      this.clearSearch();
     },
 
     loadMoreRecipes() {
