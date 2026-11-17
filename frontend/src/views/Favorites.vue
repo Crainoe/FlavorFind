@@ -149,7 +149,7 @@
               📧
             </div>
             <h4>Export Favorites</h4>
-            <p>Download your favorite recipes as a PDF or share via email</p>
+            <p>Download your favorite recipes as a text file</p>
             <button
               class="card-btn"
               @click="exportFavorites"
@@ -225,12 +225,12 @@ export default {
 
     averageCookTime() {
       if (this.favoriteRecipes.length === 0) return "0m";
-      // Since TheMealDB doesn't provide cook time, we'll simulate it
-      const estimatedTimes = this.favoriteRecipes.map(
-        () => Math.floor(Math.random() * 60) + 15
-      );
-      const total = estimatedTimes.reduce((sum, time) => sum + time, 0);
-      return Math.round(total / this.favoriteRecipes.length) + "m";
+      const times = this.favoriteRecipes
+        .map((recipe) => Number(recipe.cookTime))
+        .filter((time) => Number.isFinite(time) && time > 0);
+      if (times.length === 0) return "—";
+      const total = times.reduce((sum, time) => sum + time, 0);
+      return Math.round(total / times.length) + "m";
     },
   },
   watch: {
@@ -279,8 +279,8 @@ export default {
           (recipe) =>
             `${recipe.strMeal || recipe.title}\n${
               recipe.strInstructions || recipe.description
-            }\nCuisine: ${recipe.strArea || "Unknown"}\nMeal ID: ${
-              recipe.idMeal
+            }\nCuisine: ${recipe.strArea || recipe.cuisine || "Unknown"}\nMeal ID: ${
+              recipe.id ?? recipe.idMeal
             }\n`
         )
         .join("\n---\n\n");
@@ -296,6 +296,9 @@ export default {
 
     generateShoppingList() {
       const allIngredients = this.favoriteRecipes.flatMap((recipe) => {
+        if (Array.isArray(recipe.ingredients)) {
+          return recipe.ingredients.map((ingredient) => ingredient.name).filter(Boolean);
+        }
         const ingredients = [];
         for (let i = 1; i <= 20; i++) {
           const ingredient = recipe[`strIngredient${i}`];

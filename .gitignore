@@ -7,3 +7,10 @@ dist
 .vscode/
 *.log
 coverage/
+
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/

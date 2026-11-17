@@ -53,27 +53,28 @@ const actions = {
           root: true,
         });
 
-        // Load user's favorites
-        await dispatch("favorites/loadFavorites", null, { root: true });
       }
+      await dispatch("favorites/loadFavorites", null, { root: true });
 
       // Listen to auth changes
-      supabaseService.onAuthStateChange(async (event, session) => {
+      supabaseService.onAuthStateChange((event, session) => {
         if (event === "SIGNED_IN") {
           commit("SET_SESSION", session);
           commit("SET_USER", session.user);
           commit("SET_ERROR", null);
 
           // Migrate and load favorites when user signs in
-          await dispatch("favorites/migrateFavoritesToSupabase", null, {
-            root: true,
-          });
-          await dispatch("favorites/loadFavorites", null, { root: true });
+          setTimeout(async () => {
+            await dispatch("favorites/migrateFavoritesToSupabase", null, {
+              root: true,
+            });
+            await dispatch("favorites/loadFavorites", null, { root: true });
+          }, 0);
         } else if (event === "SIGNED_OUT") {
           commit("CLEAR_AUTH");
 
           // Load favorites from localStorage for guest users
-          await dispatch("favorites/loadFavorites", null, { root: true });
+          setTimeout(() => dispatch("favorites/loadFavorites", null, { root: true }), 0);
         }
       });
     } catch (error) {
@@ -130,6 +131,26 @@ const actions = {
       return { user, session };
     } catch (error) {
       console.error("Error signing in:", error);
+      commit("SET_ERROR", error.message);
+      throw error;
+    } finally {
+      commit("SET_LOADING", false);
+    }
+  },
+
+  async signInWithGoogle({ commit }) {
+    try {
+      commit("SET_LOADING", true);
+      commit("SET_ERROR", null);
+
+      const { url } = await supabaseService.signInWithGoogle();
+      if (url) {
+        window.location.href = url;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error signing in with Google:", error);
       commit("SET_ERROR", error.message);
       throw error;
     } finally {

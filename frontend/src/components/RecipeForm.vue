@@ -354,7 +354,7 @@ export default {
           imageFile: this.imageFile,
         });
         this.$router.push(`/recipe/${created.id}`);
-      } catch (err) {
+      } catch {
         // Error shown via getter
       }
     },

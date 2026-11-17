@@ -9,7 +9,4 @@ const app = createApp(App);
 app.use(store);
 app.use(router);
 
-// Initialize authentication
-store.dispatch("auth/initializeAuth");
-
 app.mount("#app");

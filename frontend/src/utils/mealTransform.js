@@ -65,32 +65,18 @@ function estimateCookTime(meal) {
   const instructions = meal.strInstructions?.toLowerCase() || "";
 
   // Look for time indicators in instructions
-  const timePatterns = [
-    /(\d+)\s*hours?/g,
-    /(\d+)\s*minutes?/g,
-    /(\d+)\s*mins?/g,
-    /(\d+)\s*h/g,
-    /(\d+)\s*m/g,
-  ];
-
   let totalMinutes = 0;
-  let foundTime = false;
+  const timePattern = /(\d+)\s*(hours?|hrs?|h|minutes?|mins?|m)\b/g;
+  const matches = [...instructions.matchAll(timePattern)];
 
-  timePatterns.forEach((pattern) => {
-    const matches = [...instructions.matchAll(pattern)];
-    matches.forEach((match) => {
-      const time = parseInt(match[1]);
-      if (pattern.source.includes("hour")) {
-        totalMinutes += time * 60;
-      } else {
-        totalMinutes += time;
-      }
-      foundTime = true;
-    });
+  matches.forEach((match) => {
+    const time = Number.parseInt(match[1], 10);
+    const unit = match[2];
+    totalMinutes += unit.startsWith("h") ? time * 60 : time;
   });
 
   // If no time found, estimate based on difficulty
-  if (!foundTime) {
+  if (matches.length === 0) {
     const difficulty = estimateDifficulty(meal);
     switch (difficulty) {
       case "Easy":
@@ -113,16 +99,16 @@ function estimateServings(meal) {
 
   // Look for serving indicators
   const servingPatterns = [
-    /serves?\s*(\d+)/g,
-    /(\d+)\s*servings?/g,
-    /(\d+)\s*people/g,
-    /(\d+)\s*portions?/g,
+    /serves?\s*(\d+)/,
+    /(\d+)\s*servings?/,
+    /(\d+)\s*people/,
+    /(\d+)\s*portions?/,
   ];
 
   for (const pattern of servingPatterns) {
     const match = instructions.match(pattern);
     if (match) {
-      const servings = parseInt(match[1]);
+      const servings = Number.parseInt(match[1], 10);
       if (servings >= 1 && servings <= 12) {
         return servings;
       }

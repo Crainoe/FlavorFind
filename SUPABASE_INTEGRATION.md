@@ -1,165 +1,79 @@
-# Supabase Integration for FlavorFind
+# Supabase integration
 
-This document explains how to complete the Supabase integration for your FlavorFind app.
+FlavorFind uses Supabase for authentication, profiles, favorites, community recipes, and recipe images. The integration lives in the Vue frontend; the ASP.NET Core API does not handle Supabase credentials.
 
-## 🎯 What's Been Implemented
+## Included components
 
-✅ **Supabase Client Setup**
+- Client configuration: `frontend/src/config/supabase.js`
+- Service layer: `frontend/src/services/supabaseService.js`
+- Authentication store: `frontend/src/store/modules/auth.js`
+- Favorites store: `frontend/src/store/modules/favorites.js`
+- User recipe store: `frontend/src/store/modules/userRecipes.js`
+- Database and storage policies: `supabase-schema.sql`
 
-- Installed `@supabase/supabase-js`
-- Created Supabase configuration in `src/config/supabase.js`
-- Set up client with your provided API key
+Guest favorites remain in `localStorage`. After sign-in, FlavorFind migrates them into the signed-in user's Supabase account.
 
-✅ **Service Layer**
+## Initial setup
 
-- Created `SupabaseService` class in `src/services/supabaseService.js`
-- Handles authentication, favorites, and user profile operations
-- Includes error handling and proper async/await patterns
+1. Create a Supabase project.
+2. Open its SQL editor and run `supabase-schema.sql`.
+3. Create `frontend/.env.local`:
 
-✅ **State Management Updates**
+   ```env
+   VITE_SUPABASE_URL=https://your-project.supabase.co
+   VITE_SUPABASE_ANON_KEY=your-anon-key
+   ```
 
-- Updated favorites store (`src/store/modules/favorites.js`) to use Supabase
-- Created new auth store (`src/store/modules/auth.js`) for user management
-- Added backward compatibility with localStorage for guest users
-- Automatic migration of localStorage favorites when users sign in
+4. In Supabase Authentication URL Configuration, add:
 
-✅ **UI Components**
+   - Local site URL: `http://localhost:3000`
+   - Local redirect URL: `http://localhost:3000/**`
+   - Production redirect URL: `https://crainoe.github.io/FlavorFind/**`
 
-- Created `AuthWidget` component for sign in/sign up
-- Updated `AppHeader` to include authentication controls
-- Updated `RecipeCard` to work with TheMealDB data structure
-- Updated `Favorites` view with loading states and error handling
+5. Enable any desired providers, such as Google, and configure their provider credentials in Supabase.
+6. Start the application with `npm run dev`.
 
-✅ **Database Schema**
+Environment files are ignored by Git. Never put the Supabase service-role key in the frontend. The anonymous key is public by design and relies on Row Level Security for authorization.
 
-- Created `supabase-schema.sql` with complete database setup
-- Includes tables for profiles and favorites
-- Row Level Security (RLS) policies for data protection
-- Automatic triggers and functions
+## GitHub Pages
 
-## 🚀 Next Steps to Complete Integration
+Add these GitHub repository secrets for the deployment workflow:
 
-### 1. Set Up Your Supabase Database
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
 
-1. Go to your Supabase project dashboard
-2. Navigate to the SQL Editor
-3. Copy and paste the contents of `supabase-schema.sql`
-4. Run the SQL script to create all necessary tables and policies
+The workflow injects them only while Vite builds the static site. Also ensure the GitHub Pages URL is present in Supabase's allowed redirect URLs.
 
-### 2. Configure Authentication
+## Verification checklist
 
-1. In your Supabase dashboard, go to **Authentication > Settings**
-2. Configure your Site URL (e.g., `http://localhost:3000` for development)
-3. Set up email templates if desired
-4. Enable email confirmation if you want users to verify their email
+1. Create an account and confirm the expected email flow.
+2. Sign in and sign out.
+3. Add a favorite as a guest, sign in, and verify migration.
+4. Reload and confirm signed-in favorites persist.
+5. Create, edit, and delete a community recipe.
+6. Upload a recipe image and confirm its storage policy permits access.
+7. Confirm one user cannot read or modify another user's private rows.
 
-### 3. Test the Integration
+## Troubleshooting
 
-1. Start your development server: `npm run dev`
-2. Try signing up for a new account
-3. Add some recipes to favorites
-4. Sign out and sign back in to verify data persistence
-5. Test the localStorage migration by:
-   - Adding favorites as a guest user
-   - Then signing in to see them migrate to Supabase
+### Missing environment variables
 
-### 4. Environment Variables (Optional but Recommended)
+If startup reports missing Supabase configuration, confirm that `frontend/.env.local` exists, uses the exact variable names above, and restart Vite after changing it.
 
-For production, move your Supabase credentials to environment variables:
+### Authentication redirects incorrectly
 
-1. Create a `.env.local` file:
+Check the Site URL and redirect allow list in Supabase. Local and GitHub Pages paths must both be configured when testing both environments.
 
-```env
-VITE_SUPABASE_URL=https://lkenacxddywafqoojwpd.supabase.co
-VITE_SUPABASE_ANON_KEY=your_anon_key_here
-```
+### Database operations are denied
 
-2. Update `src/config/supabase.js`:
+Reapply `supabase-schema.sql`, inspect the relevant Row Level Security policy, and confirm the request has an authenticated user session.
 
-```javascript
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-```
+### Data does not refresh
 
-## 🔧 Features Included
+Inspect the browser Network panel and console, then check the Vuex module state with Vue DevTools. Supabase project logs can confirm whether a request reached the service.
 
-### Authentication
+## References
 
-- **Sign Up/Sign In**: Modal-based authentication UI
-- **User Sessions**: Automatic session management
-- **Profile Management**: User profile creation and updates
-- **Security**: Row Level Security ensuring users only access their data
-
-### Favorites Management
-
-- **Cloud Storage**: Favorites saved to Supabase database
-- **Guest Support**: Fallback to localStorage for non-authenticated users
-- **Data Migration**: Automatic migration from localStorage to Supabase on sign-in
-- **Offline Tolerance**: Graceful fallbacks when Supabase is unavailable
-
-### User Experience
-
-- **Loading States**: Proper loading indicators during async operations
-- **Error Handling**: User-friendly error messages and retry mechanisms
-- **Backward Compatibility**: Existing localStorage favorites are preserved
-- **Responsive Design**: Works on desktop and mobile devices
-
-## 📊 Database Tables
-
-### `profiles` table
-
-- Extends the default auth.users table
-- Stores user profile information (name, avatar, etc.)
-
-### `favorites` table
-
-- Links users to their favorite recipes
-- Stores complete recipe data from TheMealDB API
-- Includes creation timestamps for sorting
-
-## 🔒 Security Features
-
-- **Row Level Security**: Users can only access their own data
-- **Authentication Required**: Sensitive operations require valid session
-- **API Key Protection**: Anon key only allows user-scoped operations
-- **Input Validation**: Proper data validation in all forms
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-1. **"User not authenticated" errors**
-
-   - Check that RLS policies are set up correctly
-   - Ensure user is properly signed in
-
-2. **Favorites not loading**
-
-   - Check browser console for errors
-   - Verify database tables exist and have correct permissions
-
-3. **Sign up not working**
-   - Check Supabase auth settings
-   - Verify email configuration
-
-### Debug Tools
-
-- Check the browser's Network tab for failed API calls
-- Use Supabase dashboard to view real-time logs
-- Check Vue DevTools for store state
-
-## 🎨 Customization Ideas
-
-- Add recipe collections/folders
-- Implement recipe sharing between users
-- Add recipe ratings and reviews
-- Create meal planning features
-- Add grocery list generation from favorites
-
-## 📚 Resources
-
-- [Supabase Documentation](https://supabase.com/docs)
-- [Vue.js Documentation](https://vuejs.org/guide/)
-- [Vuex Store Management](https://vuex.vuejs.org/)
-
-Your FlavorFind app now has a complete Supabase integration! Users can create accounts, save favorites to the cloud, and have their data synchronized across devices.
+- [Supabase documentation](https://supabase.com/docs)
+- [Vue documentation](https://vuejs.org/guide/)
+- [Vuex documentation](https://vuex.vuejs.org/)

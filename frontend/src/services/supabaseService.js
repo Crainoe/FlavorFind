@@ -38,6 +38,23 @@ class SupabaseService {
     }
   }
 
+  async signInWithGoogle() {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: new URL(import.meta.env.BASE_URL, window.location.origin).href,
+        },
+      });
+
+      if (error) throw error;
+      return { url: data.url };
+    } catch (error) {
+      console.error("Error signing in with Google:", error);
+      throw error;
+    }
+  }
+
   async signOut() {
     try {
       const { error } = await supabase.auth.signOut();
@@ -101,12 +118,14 @@ class SupabaseService {
 
   async addToFavorites(userId, recipe) {
     try {
+      const recipeId = String(recipe.id ?? recipe.idMeal ?? "");
+      if (!recipeId) throw new Error("Recipe is missing an ID");
       // Check if already exists
       const { data: existing } = await supabase
         .from("favorites")
         .select("id")
         .eq("user_id", userId)
-        .eq("recipe_id", recipe.idMeal)
+        .eq("recipe_id", recipeId)
         .single();
 
       if (existing) {
@@ -118,7 +137,7 @@ class SupabaseService {
         .insert([
           {
             user_id: userId,
-            recipe_id: recipe.idMeal,
+            recipe_id: recipeId,
             recipe_data: recipe,
             created_at: new Date().toISOString(),
           },

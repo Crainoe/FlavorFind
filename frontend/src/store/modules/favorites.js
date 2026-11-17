@@ -54,7 +54,7 @@ const actions = {
         commit(
           "SET_FAVORITES",
           localFavorites.map((recipe) => ({
-            recipe_id: recipe.id || recipe.idMeal,
+            recipe_id: String(recipe.id ?? recipe.idMeal),
             recipe_data: recipe,
           }))
         );
@@ -73,7 +73,7 @@ const actions = {
       commit(
         "SET_FAVORITES",
         localFavorites.map((recipe) => ({
-          recipe_id: recipe.id || recipe.idMeal,
+          recipe_id: String(recipe.id ?? recipe.idMeal),
           recipe_data: recipe,
         }))
       );
@@ -86,6 +86,8 @@ const actions = {
     try {
       commit("SET_LOADING", true);
       commit("SET_ERROR", null);
+      const recipeId = String(recipe.id ?? recipe.idMeal ?? "");
+      if (!recipeId) throw new Error("Recipe is missing an ID");
 
       const user = rootGetters["auth/user"];
       if (!user) {
@@ -94,7 +96,7 @@ const actions = {
           localStorage.getItem("favoriteRecipes") || "[]"
         );
         const exists = localFavorites.find(
-          (r) => (r.id || r.idMeal) === recipe.idMeal
+          (r) => String(r.id ?? r.idMeal) === recipeId
         );
         if (!exists) {
           localFavorites.push(recipe);
@@ -103,7 +105,7 @@ const actions = {
             JSON.stringify(localFavorites)
           );
           commit("ADD_FAVORITE", {
-            recipe_id: recipe.idMeal,
+            recipe_id: recipeId,
             recipe_data: recipe,
           });
         }
@@ -134,7 +136,7 @@ const actions = {
           localStorage.getItem("favoriteRecipes") || "[]"
         );
         const updatedFavorites = localFavorites.filter(
-          (r) => (r.id || r.idMeal) !== recipeId
+          (r) => String(r.id ?? r.idMeal) !== String(recipeId)
         );
         localStorage.setItem(
           "favoriteRecipes",
@@ -191,10 +193,12 @@ const actions = {
       commit("SET_LOADING", true);
 
       // Add each local favorite to Supabase
+      const failedFavorites = [];
       for (const recipe of localFavorites) {
         try {
           await supabaseService.addToFavorites(user.id, recipe);
         } catch (error) {
+          failedFavorites.push(recipe);
           console.warn(
             "Failed to migrate recipe:",
             recipe.strMeal || recipe.name,
@@ -203,8 +207,12 @@ const actions = {
         }
       }
 
-      // Clear localStorage after migration
-      localStorage.removeItem("favoriteRecipes");
+      // Keep favorites that could not be migrated so they can be retried.
+      if (failedFavorites.length > 0) {
+        localStorage.setItem("favoriteRecipes", JSON.stringify(failedFavorites));
+      } else {
+        localStorage.removeItem("favoriteRecipes");
+      }
 
       // Reload favorites from Supabase
       const favorites = await supabaseService.getFavorites(user.id);
@@ -225,7 +233,7 @@ const getters = {
   error: (state) => state.error,
   isFavorite: (state) => (recipeId) => {
     return state.favoriteRecipes.some(
-      (favorite) => favorite.recipe_id === recipeId
+      (favorite) => String(favorite.recipe_id) === String(recipeId)
     );
   },
   // Get actual recipe data for display

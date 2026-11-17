@@ -159,7 +159,7 @@ import FilterPanel from "@/components/FilterPanel.vue";
 import RecipeCard from "@/components/RecipeCard.vue";
 
 export default {
-  name: "Search",
+  name: "SearchView",
   components: {
     SearchBar,
     FilterPanel,

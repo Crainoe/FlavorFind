@@ -1,201 +1,97 @@
 # FlavorFind
 
-A modern Vue.js application for discovering, searching, and saving amazing recipes. Built with Vue 3, Vue Router, and Vuex for state management.
+FlavorFind is a recipe discovery application with a Vue 3 frontend, Supabase-backed authentication and user data, TheMealDB recipe data, and an ASP.NET Core API foundation.
 
-## 🚀 Features
+## Features
 
-- **Recipe Browsing**: Explore a curated collection of recipes with beautiful card layouts
-- **Advanced Search**: Search by ingredients, cuisine, dietary restrictions, and cooking time
-- **Smart Filtering**: Filter recipes by cuisine type, dietary preferences, difficulty, and preparation time
-- **Favorites System**: Save your favorite recipes with persistent local storage
-- **Responsive Design**: Optimized for desktop, tablet, and mobile devices
-- **Modern UI**: Clean, intuitive interface with smooth animations and transitions
+- Browse and search recipes from TheMealDB
+- Filter by category and cuisine
+- Save favorites as a guest or signed-in user
+- Create and manage community recipes
+- Sign in with email or Google through Supabase
+- Responsive light and dark themes
 
-## 🛠 Technology Stack
+## Repository layout
 
-- **Frontend Framework**: Vue.js 3 (Composition API ready)
-- **Routing**: Vue Router 4
-- **State Management**: Vuex 4
-- **Build Tool**: Vite
-- **Styling**: Modern CSS with custom properties and utility classes
-- **Icons**: Emoji-based icons for a friendly, universal design
-
-## 📁 Project Structure
-
-```
-src/
-├── components/
-│   ├── layout/
-│   │   ├── AppHeader.vue      # Main navigation header
-│   │   └── AppFooter.vue      # Application footer
-│   ├── RecipeCard.vue         # Recipe display component
-│   ├── SearchBar.vue          # Search functionality
-│   └── FilterPanel.vue        # Advanced filtering
-├── views/
-│   ├── Home.vue              # Landing page with featured recipes
-│   ├── Search.vue            # Recipe search and filtering
-│   ├── RecipeDetail.vue      # Individual recipe details
-│   └── Favorites.vue         # Saved recipes collection
-├── store/
-│   ├── modules/
-│   │   ├── recipes.js        # Recipe data management
-│   │   ├── favorites.js      # Favorites functionality
-│   │   └── search.js         # Search and filtering logic
-│   └── index.js              # Vuex store configuration
-├── router/
-│   └── index.js              # Vue Router setup
-├── assets/
-│   └── styles/
-│       └── main.css          # Global styles and utilities
-└── main.js                   # Application entry point
+```text
+FlavorFind/
+|-- frontend/                 Vue 3 and Vite web application
+|   |-- src/components/
+|   |-- src/services/
+|   |-- src/store/
+|   |-- src/views/
+|   `-- tests/
+|-- backend/
+|   `-- src/FlavorFind.Api/   ASP.NET Core API
+|-- .github/workflows/        CI and GitHub Pages deployment
+`-- supabase-schema.sql       Supabase database schema and policies
 ```
 
-## 🚀 Getting Started
+The frontend currently talks directly to Supabase and TheMealDB. The backend exposes `/api/health` and is the starting point for future server-owned operations. GitHub Pages deploys only the static frontend; deploy the API separately if frontend features begin to depend on it.
 
-### Prerequisites
+## Prerequisites
 
-- Node.js (v14 or higher)
-- npm or yarn
+- Node.js 22 or newer
+- npm
+- .NET SDK 10
+- A Supabase project
 
-### Installation
+## Setup
 
-1. Clone the repository:
-
-   ```bash
-   git clone <repository-url>
-   cd vue-project
-   ```
-
-2. Install dependencies:
+1. Install all dependencies:
 
    ```bash
-   npm install
+   npm run install:all
    ```
 
-3. Start the development server:
+2. Create `frontend/.env.local`:
+
+   ```env
+   VITE_SUPABASE_URL=https://your-project.supabase.co
+   VITE_SUPABASE_ANON_KEY=your-anon-key
+   ```
+
+3. Apply [supabase-schema.sql](supabase-schema.sql) in the Supabase SQL editor.
+
+4. Start the frontend and backend together:
 
    ```bash
    npm run dev
    ```
 
-4. Open your browser and navigate to `http://localhost:3000`
+The frontend runs at `http://localhost:3000`. The API launch profile uses `http://localhost:5004`, and its health endpoint is `http://localhost:5004/api/health`.
 
-### Available Scripts
+## Commands
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build locally
-- `npm run lint` - Lint and fix code issues
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Run the frontend and API together |
+| `npm run dev:frontend` | Run only the Vite frontend |
+| `npm run dev:backend` | Run only the ASP.NET Core API |
+| `npm run lint` | Check frontend code without modifying it |
+| `npm test` | Run frontend unit tests once |
+| `npm run build` | Build both frontend and backend |
+| `npm run check` | Lint, test, and build the whole repository |
 
-## 🏗 Architecture Highlights
+Use `npm --prefix frontend run lint:fix` when you intentionally want ESLint to rewrite formatting.
 
-### State Management (Vuex)
+## Deployment
 
-The application uses a modular Vuex store structure:
+The workflow in `.github/workflows/deploy.yml` validates the frontend and backend, then deploys `frontend/dist` to GitHub Pages.
 
-- **Recipes Module**: Manages recipe data, loading states, and API integration points
-- **Favorites Module**: Handles saved recipes with localStorage persistence
-- **Search Module**: Controls search queries, filters, and result processing
+Add these repository secrets before running it:
 
-### Component Design
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
 
-Components follow Vue.js best practices:
+The Supabase anonymous key is designed for browser use; data security must be enforced by the Row Level Security policies in `supabase-schema.sql`.
 
-- **Single Responsibility**: Each component has a clear, focused purpose
-- **Props & Events**: Clean parent-child communication
-- **Composition Ready**: Built to easily migrate to Composition API
-- **Reusable**: Modular design for maximum reusability
+## Architecture notes
 
-### Responsive Design
+- Vuex modules own authentication, favorites, recipes, search, and theme state.
+- `frontend/src/services` contains external-service access.
+- `frontend/src/utils/mealTransform.js` normalizes TheMealDB responses.
+- Supabase stores profiles, favorites, user recipes, and uploaded recipe images.
+- ASP.NET Core configuration restricts CORS to configured origins.
 
-The application uses a mobile-first approach with:
-
-- **CSS Grid & Flexbox**: Modern layout techniques
-- **CSS Custom Properties**: Consistent theming and easy customization
-- **Breakpoint System**: Responsive design for all device sizes
-- **Touch-Friendly**: Optimized interactions for mobile devices
-
-## 🎨 Design System
-
-### Color Palette
-
-- **Primary**: Purple gradient (#667eea to #764ba2)
-- **Secondary**: Green accent (#48bb78)
-- **Neutrals**: Sophisticated gray scale
-- **Semantic**: Standard colors for success, warning, and error states
-
-### Typography
-
-- **Font Stack**: System fonts for optimal performance and native feel
-- **Scale**: Consistent sizing using CSS custom properties
-- **Hierarchy**: Clear visual hierarchy with appropriate font weights
-
-### Components
-
-- **Cards**: Elevated design with hover effects and shadows
-- **Buttons**: Multiple variants with smooth transitions
-- **Forms**: Clean, accessible input styling
-- **Navigation**: Intuitive routing with active states
-
-## 📱 Features Deep Dive
-
-### Recipe Management
-
-- **Sample Data**: Pre-loaded with diverse recipe examples
-- **Rich Metadata**: Cooking time, servings, difficulty, cuisine type
-- **Dietary Tags**: Vegetarian, vegan, gluten-free classifications
-- **Detailed Views**: Complete ingredient lists and step-by-step instructions
-
-### Search & Discovery
-
-- **Real-time Search**: Instant results as you type
-- **Multi-criteria Filtering**: Combine multiple filters for precise results
-- **Smart Suggestions**: Search through titles, descriptions, and ingredients
-- **Result Management**: Clear indication of active filters and result counts
-
-### Favorites System
-
-- **One-click Saving**: Heart icon toggle for easy favoriting
-- **Persistent Storage**: Favorites saved in localStorage
-- **Statistics**: Track your collection with metrics
-- **Bulk Actions**: Clear all favorites with confirmation
-
-## 🔮 Future Enhancements
-
-See `TODO.txt` for a comprehensive list of planned features and improvements, including:
-
-- Real API integration
-- Progressive Web App features
-- User authentication
-- Advanced filtering
-- Social features
-- Performance optimizations
-
-## 🤝 Contributing
-
-This is a portfolio project, but suggestions and feedback are welcome! Please feel free to:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
-
-## 👨‍💻 Developer
-
-Built as a portfolio project to demonstrate:
-
-- Vue.js 3 proficiency
-- Modern JavaScript development
-- Component-based architecture
-- State management with Vuex
-- Responsive web design
-- User experience design
-- Modern build tools and workflows
-
----
-
-_This project showcases modern frontend development practices and serves as a foundation for building scalable Vue.js applications._
+See [SUPABASE_INTEGRATION.md](SUPABASE_INTEGRATION.md) for Supabase setup and troubleshooting details.

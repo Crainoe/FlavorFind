@@ -75,8 +75,12 @@ const router = createRouter({
   },
 });
 
-router.beforeEach((to, from, next) => {
+const authReady = store.dispatch("auth/initializeAuth");
+
+router.beforeEach(async (to, from, next) => {
   document.title = to.meta.title || "Recipe Explorer";
+
+  if (to.meta.requiresAuth) await authReady;
 
   if (to.meta.requiresAuth && !store.getters["auth/isAuthenticated"]) {
     next({ path: "/", query: { auth: "required", redirect: to.fullPath } });
