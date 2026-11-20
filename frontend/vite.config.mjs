@@ -7,7 +7,7 @@ const projectRoot = fileURLToPath(new URL(".", import.meta.url));
 
 export default defineConfig({
   plugins: [vue()],
-  base: process.env.NODE_ENV === "production" ? "/FlavorFind/" : "/",
+  base: "/",
   resolve: {
     alias: {
       "@": resolve(projectRoot, "src"),

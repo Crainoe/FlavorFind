@@ -23,11 +23,11 @@ FlavorFind/
 |   `-- tests/
 |-- backend/
 |   `-- src/FlavorFind.Api/   ASP.NET Core API
-|-- .github/workflows/        CI and GitHub Pages deployment
+|-- .github/workflows/        CI validation
 `-- supabase-schema.sql       Supabase database schema and policies
 ```
 
-The frontend currently talks directly to Supabase and TheMealDB. The backend exposes `/api/health` and is the starting point for future server-owned operations. GitHub Pages deploys only the static frontend; deploy the API separately if frontend features begin to depend on it.
+The frontend currently talks directly to Supabase and TheMealDB. The backend exposes `/api/health` and is the starting point for future server-owned operations. Deploy the API separately if frontend features begin to depend on it.
 
 ## Prerequisites
 
@@ -77,9 +77,9 @@ Use `npm --prefix frontend run lint:fix` when you intentionally want ESLint to r
 
 ## Deployment
 
-The workflow in `.github/workflows/deploy.yml` validates the frontend and backend, then deploys `frontend/dist` to GitHub Pages.
+The workflow in `.github/workflows/deploy.yml` validates the frontend and backend without publishing the site. The frontend build uses `/` as its base path for a root domain such as `beta.flavfind.com`.
 
-Add these repository secrets before running it:
+Add these repository secrets before running the validation workflow:
 
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`

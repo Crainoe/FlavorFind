@@ -28,21 +28,21 @@ Guest favorites remain in `localStorage`. After sign-in, FlavorFind migrates the
 
    - Local site URL: `http://localhost:3000`
    - Local redirect URL: `http://localhost:3000/**`
-   - Production redirect URL: `https://crainoe.github.io/FlavorFind/**`
+   - Beta redirect URL: `https://beta.flavfind.com/`
 
 5. Enable any desired providers, such as Google, and configure their provider credentials in Supabase.
 6. Start the application with `npm run dev`.
 
 Environment files are ignored by Git. Never put the Supabase service-role key in the frontend. The anonymous key is public by design and relies on Row Level Security for authorization.
 
-## GitHub Pages
+## Beta deployment
 
-Add these GitHub repository secrets for the deployment workflow:
+The GitHub Actions workflow validates the app but does not deploy it. Configure these values as Cloudflare Pages build environment variables when setting up the beta deployment:
 
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 
-The workflow injects them only while Vite builds the static site. Also ensure the GitHub Pages URL is present in Supabase's allowed redirect URLs.
+The values are injected when Vite builds the static site. Add `https://beta.flavfind.com/` to the Supabase Authentication redirect allow list before testing sign-in. Configure the Site URL to point to the beta domain if this Supabase project is dedicated to beta testing.
 
 ## Verification checklist
 
@@ -62,7 +62,7 @@ If startup reports missing Supabase configuration, confirm that `frontend/.env.l
 
 ### Authentication redirects incorrectly
 
-Check the Site URL and redirect allow list in Supabase. Local and GitHub Pages paths must both be configured when testing both environments.
+Check the Site URL and redirect allow list in Supabase. Local and beta URLs must both be configured when testing both environments.
 
 ### Database operations are denied
 
