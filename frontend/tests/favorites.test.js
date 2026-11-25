@@ -1,14 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../src/services/supabaseService.js", () => ({
+vi.mock("../src/services/favoritesService.js", () => ({
   default: {
     addToFavorites: vi.fn(),
     getFavorites: vi.fn(),
   },
 }));
+vi.mock("../src/services/recipeService.js", () => ({
+  default: { getRecipeById: vi.fn() },
+}));
 
 import favorites from "../src/store/modules/favorites.js";
-import supabaseService from "../src/services/supabaseService.js";
+import favoritesService from "../src/services/favoritesService.js";
 
 const storage = new Map();
 const localStorageMock = {
@@ -51,8 +54,8 @@ describe("favorites", () => {
   it("keeps guest favorites when cloud migration fails", async () => {
     const recipe = { id: "42", title: "Curry" };
     storage.set("favoriteRecipes", JSON.stringify([recipe]));
-    supabaseService.addToFavorites.mockRejectedValueOnce(new Error("offline"));
-    supabaseService.getFavorites.mockResolvedValueOnce([]);
+    favoritesService.addToFavorites.mockRejectedValueOnce(new Error("offline"));
+    favoritesService.getFavorites.mockResolvedValueOnce([]);
 
     await favorites.actions.migrateFavoritesToSupabase(
       context({ id: "user-1" }),

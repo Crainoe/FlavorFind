@@ -1,4 +1,5 @@
-import supabaseService from "../../services/supabaseService.js";
+import authService from "../../services/authService.js";
+import profileService from "../../services/profileService.js";
 
 const state = {
   user: null,
@@ -42,7 +43,7 @@ const actions = {
       commit("SET_LOADING", true);
 
       // Get current session
-      const session = await supabaseService.getCurrentSession();
+      const session = await authService.getCurrentSession();
 
       if (session) {
         commit("SET_SESSION", session);
@@ -57,7 +58,7 @@ const actions = {
       await dispatch("favorites/loadFavorites", null, { root: true });
 
       // Listen to auth changes
-      supabaseService.onAuthStateChange((event, session) => {
+      authService.onAuthStateChange((event, session) => {
         if (event === "SIGNED_IN") {
           commit("SET_SESSION", session);
           commit("SET_USER", session.user);
@@ -91,7 +92,7 @@ const actions = {
       commit("SET_LOADING", true);
       commit("SET_ERROR", null);
 
-      const { user, session } = await supabaseService.signUp(
+      const { user, session } = await authService.signUp(
         email,
         password,
         userData
@@ -117,7 +118,7 @@ const actions = {
       commit("SET_LOADING", true);
       commit("SET_ERROR", null);
 
-      const { user, session } = await supabaseService.signIn(email, password);
+      const { user, session } = await authService.signIn(email, password);
 
       commit("SET_SESSION", session);
       commit("SET_USER", user);
@@ -143,7 +144,7 @@ const actions = {
       commit("SET_LOADING", true);
       commit("SET_ERROR", null);
 
-      const { url } = await supabaseService.signInWithGoogle();
+      const { url } = await authService.signInWithGoogle();
       if (url) {
         window.location.href = url;
       }
@@ -163,7 +164,7 @@ const actions = {
       commit("SET_LOADING", true);
       commit("SET_ERROR", null);
 
-      await supabaseService.signOut();
+      await authService.signOut();
       commit("CLEAR_AUTH");
 
       // Load favorites from localStorage for guest users
@@ -184,12 +185,12 @@ const actions = {
       commit("SET_LOADING", true);
       commit("SET_ERROR", null);
 
-      const user = await supabaseService.getCurrentUser();
+      const user = await authService.getCurrentUser();
       if (!user) {
         throw new Error("No user logged in");
       }
 
-      const profile = await supabaseService.updateUserProfile(user.id, updates);
+      const profile = await profileService.updateUserProfile(user.id, updates);
 
       // Update user object with new data
       const updatedUser = { ...user, ...updates };

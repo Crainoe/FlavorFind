@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import searchModule from "../src/store/modules/search.js";
 import mealService from "../src/services/mealService.js";
-import supabaseService from "../src/services/supabaseService.js";
+import recipeService from "../src/services/recipeService.js";
 
 vi.mock("../src/services/mealService.js", () => ({
   default: { searchMeals: vi.fn(), getMealsByArea: vi.fn() },
 }));
-vi.mock("../src/services/supabaseService.js", () => ({
+vi.mock("../src/services/recipeService.js", () => ({
   default: { searchPublicRecipes: vi.fn(), getPublicRecipes: vi.fn() },
 }));
 
@@ -25,8 +25,8 @@ function harness() {
 describe("search requests and filters", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    supabaseService.searchPublicRecipes.mockResolvedValue([]);
-    supabaseService.getPublicRecipes.mockResolvedValue([]);
+    recipeService.searchPublicRecipes.mockResolvedValue([]);
+    recipeService.getPublicRecipes.mockResolvedValue([]);
   });
 
   it("applies local filters without repeating network searches", async () => {
@@ -44,7 +44,7 @@ describe("search requests and filters", () => {
     await searchModule.actions.updateFilter(context, { filterType: "maxCookTime", value: 30 });
 
     expect(mealService.searchMeals).toHaveBeenCalledTimes(1);
-    expect(supabaseService.searchPublicRecipes).toHaveBeenCalledTimes(1);
+    expect(recipeService.searchPublicRecipes).toHaveBeenCalledTimes(1);
     expect(searchModule.getters.searchResults(context.state)).toHaveLength(1);
 
     await searchModule.actions.updateFilter(context, { filterType: "maxCookTime", value: 15 });

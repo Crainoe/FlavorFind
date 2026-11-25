@@ -1,4 +1,6 @@
-import supabaseService from "../../services/supabaseService.js";
+import recipeService from "../../services/recipeService.js";
+import recipeImageService from "../../services/recipeImageService.js";
+import { transformUserRecipe } from "../../utils/userRecipeTransform.js";
 
 const PUBLIC_PAGE_SIZE = 24;
 
@@ -53,27 +55,6 @@ const mutations = {
   },
 };
 
-const transformRecipe = (row) => ({
-  id: row.id,
-  strMeal: row.title,
-  title: row.title,
-  strMealThumb: row.image_url,
-  image: row.image_url,
-  strArea: row.cuisine,
-  cuisine: row.cuisine,
-  strCategory: row.category,
-  category: row.category,
-  description: row.description,
-  cookTime: row.cook_time,
-  servings: row.servings,
-  ingredients: row.ingredients || [],
-  instructions: row.instructions || [],
-  isPublic: row.is_public,
-  isUserRecipe: true,
-  userId: row.user_id,
-  createdAt: row.created_at,
-});
-
 const actions = {
   async fetchUserRecipes({ commit, rootGetters }) {
     const user = rootGetters["auth/user"];
@@ -83,8 +64,8 @@ const actions = {
     commit("CLEAR_ERROR");
 
     try {
-      const recipes = await supabaseService.getUserRecipes(user.id);
-      const transformed = recipes.map(transformRecipe);
+      const recipes = await recipeService.getUserRecipes(user.id);
+      const transformed = recipes.map(transformUserRecipe);
       commit("SET_USER_RECIPES", transformed);
       return transformed;
     } catch (error) {
@@ -103,8 +84,8 @@ const actions = {
     commit("CLEAR_ERROR");
 
     try {
-      const recipes = await supabaseService.getPublicRecipes({ pageSize: PUBLIC_PAGE_SIZE });
-      const transformed = recipes.map(transformRecipe);
+      const recipes = await recipeService.getPublicRecipes({ pageSize: PUBLIC_PAGE_SIZE });
+      const transformed = recipes.map(transformUserRecipe);
       commit("SET_PUBLIC_RECIPES", transformed);
       commit("SET_PUBLIC_RECIPES_LOADED", true);
       commit("SET_PUBLIC_PAGE", 0);
@@ -125,11 +106,11 @@ const actions = {
     commit("CLEAR_ERROR");
     try {
       const nextPage = state.publicPage + 1;
-      const recipes = await supabaseService.getPublicRecipes({
+      const recipes = await recipeService.getPublicRecipes({
         page: nextPage,
         pageSize: PUBLIC_PAGE_SIZE,
       });
-      const transformed = recipes.map(transformRecipe);
+      const transformed = recipes.map(transformUserRecipe);
       const existingIds = new Set(state.publicRecipes.map((recipe) => recipe.id));
       commit("SET_PUBLIC_RECIPES", [
         ...state.publicRecipes,
@@ -153,11 +134,11 @@ const actions = {
     commit("CLEAR_ERROR");
 
     try {
-      const recipe = await supabaseService.getRecipeById(
+      const recipe = await recipeService.getRecipeById(
         recipeId,
         user?.id || null
       );
-      const transformed = recipe ? transformRecipe(recipe) : null;
+      const transformed = recipe ? transformUserRecipe(recipe) : null;
       commit("SET_CURRENT_USER_RECIPE", transformed);
       return transformed;
     } catch (error) {
@@ -180,16 +161,16 @@ const actions = {
     try {
       let imageUrl = null;
       if (imageFile) {
-        imageUrl = await supabaseService.uploadRecipeImage(user.id, imageFile);
+        imageUrl = await recipeImageService.uploadRecipeImage(user.id, imageFile);
         commit("SET_UPLOADING", false);
       }
 
-      const created = await supabaseService.createRecipe(user.id, {
+      const created = await recipeService.createRecipe(user.id, {
         ...recipe,
         imageUrl,
       });
 
-      const transformed = transformRecipe(created);
+      const transformed = transformUserRecipe(created);
       commit("ADD_USER_RECIPE", transformed);
       if (transformed.isPublic) {
         commit("SET_PUBLIC_RECIPES", [transformed, ...state.publicRecipes]);
@@ -214,9 +195,9 @@ const actions = {
     try {
       const recipe = state.userRecipes.find((r) => r.id === recipeId);
       if (recipe?.image) {
-        await supabaseService.deleteRecipeImage(recipe.image);
+        await recipeImageService.deleteRecipeImage(recipe.image);
       }
-      await supabaseService.deleteRecipe(user.id, recipeId);
+      await recipeService.deleteRecipe(user.id, recipeId);
       commit("REMOVE_USER_RECIPE", recipeId);
       commit(
         "SET_PUBLIC_RECIPES",

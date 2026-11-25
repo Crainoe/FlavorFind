@@ -1,4 +1,5 @@
-import supabaseService from "../../services/supabaseService.js";
+import favoritesService from "../../services/favoritesService.js";
+import recipeService from "../../services/recipeService.js";
 
 const state = {
   favoriteRecipes: [],
@@ -61,7 +62,7 @@ const actions = {
         return;
       }
 
-      const favorites = await supabaseService.getFavorites(user.id);
+      const favorites = await favoritesService.getFavorites(user.id);
       commit("SET_FAVORITES", favorites);
     } catch (error) {
       console.error("Error loading favorites:", error);
@@ -91,7 +92,7 @@ const actions = {
 
       const user = rootGetters["auth/user"];
       if (recipe.isUserRecipe && !recipe.ingredients) {
-        const fullRecipe = await supabaseService.getRecipeById(recipe.id, user?.id || null);
+        const fullRecipe = await recipeService.getRecipeById(recipe.id, user?.id || null);
         if (fullRecipe) {
           recipe = {
             ...recipe,
@@ -122,7 +123,7 @@ const actions = {
         return;
       }
 
-      const favorite = await supabaseService.addToFavorites(user.id, recipe);
+      const favorite = await favoritesService.addToFavorites(user.id, recipe);
       if (favorite && favorite.recipe_id) {
         commit("ADD_FAVORITE", favorite);
       }
@@ -156,7 +157,7 @@ const actions = {
         return;
       }
 
-      await supabaseService.removeFromFavorites(user.id, recipeId);
+      await favoritesService.removeFromFavorites(user.id, recipeId);
       commit("REMOVE_FAVORITE", recipeId);
     } catch (error) {
       console.error("Error removing from favorites:", error);
@@ -179,7 +180,7 @@ const actions = {
         return;
       }
 
-      await supabaseService.clearFavorites(user.id);
+      await favoritesService.clearFavorites(user.id);
       commit("CLEAR_FAVORITES");
     } catch (error) {
       console.error("Error clearing favorites:", error);
@@ -206,7 +207,7 @@ const actions = {
       const failedFavorites = [];
       for (const recipe of localFavorites) {
         try {
-          await supabaseService.addToFavorites(user.id, recipe);
+          await favoritesService.addToFavorites(user.id, recipe);
         } catch (error) {
           failedFavorites.push(recipe);
           console.warn(
@@ -225,7 +226,7 @@ const actions = {
       }
 
       // Reload favorites from Supabase
-      const favorites = await supabaseService.getFavorites(user.id);
+      const favorites = await favoritesService.getFavorites(user.id);
       commit("SET_FAVORITES", favorites);
     } catch (error) {
       console.error("Error migrating favorites:", error);

@@ -1,29 +1,10 @@
 import mealService from "@/services/mealService";
-import supabaseService from "@/services/supabaseService";
+import recipeService from "@/services/recipeService";
 import { transformMealsData } from "@/utils/mealTransform";
+import { transformUserRecipeForSearch } from "@/utils/userRecipeTransform";
 
 let latestSearchId = 0;
 const PUBLIC_PAGE_SIZE = 24;
-
-const transformPublicRecipe = (row) => ({
-  id: row.id,
-  strMeal: row.title,
-  title: row.title,
-  strMealThumb: row.image_url,
-  image: row.image_url,
-  strArea: row.cuisine,
-  cuisine: row.cuisine,
-  strCategory: row.category,
-  category: row.category,
-  description: row.description,
-  cookTime: row.cook_time || 30,
-  servings: row.servings || 2,
-  difficulty: "Medium",
-  dietary: [],
-  isUserRecipe: true,
-  userId: row.user_id,
-  createdAt: row.created_at,
-});
 
 const state = {
   searchQuery: "",
@@ -107,8 +88,8 @@ const actions = {
     try {
       let searchResults = [];
       const publicRequest = (query
-        ? supabaseService.searchPublicRecipes(query, { pageSize: PUBLIC_PAGE_SIZE })
-        : supabaseService.getPublicRecipes({ pageSize: PUBLIC_PAGE_SIZE })
+        ? recipeService.searchPublicRecipes(query, { pageSize: PUBLIC_PAGE_SIZE })
+        : recipeService.getPublicRecipes({ pageSize: PUBLIC_PAGE_SIZE })
       ).catch((error) => {
         console.warn("Could not load user recipes for search:", error);
         return [];
@@ -133,7 +114,7 @@ const actions = {
       if (userRecipes.length > 0) {
         const existingIds = new Set(searchResults.map((recipe) => recipe.id));
         const toAdd = userRecipes
-          .map(transformPublicRecipe)
+          .map(transformUserRecipeForSearch)
           .filter((recipe) => !existingIds.has(recipe.id));
         searchResults = [...toAdd, ...searchResults];
       }
@@ -163,11 +144,11 @@ const actions = {
     commit("SET_IS_SEARCHING", true);
     try {
       const rows = query
-        ? await supabaseService.searchPublicRecipes(query, { page: nextPage, pageSize: PUBLIC_PAGE_SIZE })
-        : await supabaseService.getPublicRecipes({ page: nextPage, pageSize: PUBLIC_PAGE_SIZE });
+        ? await recipeService.searchPublicRecipes(query, { page: nextPage, pageSize: PUBLIC_PAGE_SIZE })
+        : await recipeService.getPublicRecipes({ page: nextPage, pageSize: PUBLIC_PAGE_SIZE });
       if (searchId !== latestSearchId) return [];
       const existingIds = new Set(state.searchResults.map((recipe) => recipe.id));
-      const toAdd = rows.map(transformPublicRecipe).filter((recipe) => !existingIds.has(recipe.id));
+      const toAdd = rows.map(transformUserRecipeForSearch).filter((recipe) => !existingIds.has(recipe.id));
       commit("SET_SEARCH_RESULTS", [...state.searchResults, ...toAdd]);
       commit("SET_PUBLIC_PAGE", nextPage);
       commit("SET_HAS_MORE_PUBLIC_RESULTS", rows.length === PUBLIC_PAGE_SIZE);
