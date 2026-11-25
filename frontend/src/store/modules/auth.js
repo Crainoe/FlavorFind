@@ -38,7 +38,7 @@ const mutations = {
 };
 
 const actions = {
-  async initializeAuth({ commit, dispatch }) {
+  async initializeAuth({ commit, dispatch, state }) {
     try {
       commit("SET_LOADING", true);
 
@@ -60,6 +60,11 @@ const actions = {
       // Listen to auth changes
       authService.onAuthStateChange((event, session) => {
         if (event === "SIGNED_IN") {
+          if (state.user?.id !== session.user.id) {
+            dispatch("userRecipes/clearCachedRecipes", null, { root: true });
+            dispatch("search/resetSearch", null, { root: true });
+            dispatch("favorites/resetFavorites", null, { root: true });
+          }
           commit("SET_SESSION", session);
           commit("SET_USER", session.user);
           commit("SET_ERROR", null);
@@ -73,6 +78,9 @@ const actions = {
           }, 0);
         } else if (event === "SIGNED_OUT") {
           commit("CLEAR_AUTH");
+          dispatch("userRecipes/clearCachedRecipes", null, { root: true });
+          dispatch("search/resetSearch", null, { root: true });
+          dispatch("favorites/resetFavorites", null, { root: true });
 
           // Load favorites from localStorage for guest users
           setTimeout(() => dispatch("favorites/loadFavorites", null, { root: true }), 0);
@@ -113,13 +121,18 @@ const actions = {
     }
   },
 
-  async signIn({ commit, dispatch }, { email, password }) {
+  async signIn({ commit, dispatch, state }, { email, password }) {
     try {
       commit("SET_LOADING", true);
       commit("SET_ERROR", null);
 
       const { user, session } = await authService.signIn(email, password);
 
+      if (state.user?.id !== user.id) {
+        await dispatch("userRecipes/clearCachedRecipes", null, { root: true });
+        await dispatch("search/resetSearch", null, { root: true });
+        await dispatch("favorites/resetFavorites", null, { root: true });
+      }
       commit("SET_SESSION", session);
       commit("SET_USER", user);
 
@@ -166,6 +179,9 @@ const actions = {
 
       await authService.signOut();
       commit("CLEAR_AUTH");
+      await dispatch("userRecipes/clearCachedRecipes", null, { root: true });
+      await dispatch("search/resetSearch", null, { root: true });
+      await dispatch("favorites/resetFavorites", null, { root: true });
 
       // Load favorites from localStorage for guest users
       await dispatch("favorites/loadFavorites", null, { root: true });

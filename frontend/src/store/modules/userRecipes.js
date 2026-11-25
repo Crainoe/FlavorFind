@@ -3,6 +3,7 @@ import recipeImageService from "../../services/recipeImageService.js";
 import { transformUserRecipe } from "../../utils/userRecipeTransform.js";
 
 const PUBLIC_PAGE_SIZE = 24;
+let privateDataVersion = 0;
 
 const state = {
   userRecipes: [],
@@ -56,9 +57,20 @@ const mutations = {
 };
 
 const actions = {
+  clearCachedRecipes({ commit }) {
+    ++privateDataVersion;
+    commit("SET_USER_RECIPES", []);
+    commit("SET_CURRENT_USER_RECIPE", null);
+    commit("SET_PUBLIC_RECIPES", []);
+    commit("SET_PUBLIC_RECIPES_LOADED", false);
+    commit("SET_PUBLIC_PAGE", 0);
+    commit("SET_HAS_MORE_PUBLIC_RECIPES", true);
+    commit("CLEAR_ERROR");
+  },
   async fetchUserRecipes({ commit, rootGetters }) {
     const user = rootGetters["auth/user"];
     if (!user) return [];
+    const version = privateDataVersion;
 
     commit("SET_LOADING", true);
     commit("CLEAR_ERROR");
@@ -66,7 +78,9 @@ const actions = {
     try {
       const recipes = await recipeService.getUserRecipes(user.id);
       const transformed = recipes.map(transformUserRecipe);
-      commit("SET_USER_RECIPES", transformed);
+      if (version === privateDataVersion && rootGetters["auth/user"]?.id === user.id) {
+        commit("SET_USER_RECIPES", transformed);
+      }
       return transformed;
     } catch (error) {
       console.error("Error fetching user recipes:", error);
@@ -130,6 +144,7 @@ const actions = {
 
   async fetchUserRecipeById({ commit, rootGetters }, recipeId) {
     const user = rootGetters["auth/user"];
+    const version = privateDataVersion;
     commit("SET_LOADING", true);
     commit("CLEAR_ERROR");
 
@@ -139,7 +154,9 @@ const actions = {
         user?.id || null
       );
       const transformed = recipe ? transformUserRecipe(recipe) : null;
-      commit("SET_CURRENT_USER_RECIPE", transformed);
+      if (version === privateDataVersion && rootGetters["auth/user"]?.id === user?.id) {
+        commit("SET_CURRENT_USER_RECIPE", transformed);
+      }
       return transformed;
     } catch (error) {
       console.error("Error fetching recipe:", error);
@@ -194,15 +211,15 @@ const actions = {
 
     try {
       const recipe = state.userRecipes.find((r) => r.id === recipeId);
-      if (recipe?.image) {
-        await recipeImageService.deleteRecipeImage(recipe.image);
-      }
       await recipeService.deleteRecipe(user.id, recipeId);
       commit("REMOVE_USER_RECIPE", recipeId);
       commit(
         "SET_PUBLIC_RECIPES",
         state.publicRecipes.filter((r) => r.id !== recipeId)
       );
+      if (recipe?.image) {
+        await recipeImageService.deleteRecipeImage(recipe.image);
+      }
       return true;
     } catch (error) {
       console.error("Error deleting recipe:", error);

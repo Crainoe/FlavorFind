@@ -12,6 +12,12 @@
 
     <!-- Filter Panel -->
     <FilterPanel />
+    <p
+      v-if="filters.dietary || filters.difficulty"
+      class="filter-note"
+    >
+      Community recipes without dietary or difficulty details are excluded by these filters.
+    </p>
 
     <!-- Search Results -->
     <div class="search-results">
@@ -52,6 +58,21 @@
         <p>Searching for delicious recipes...</p>
       </div>
 
+      <div
+        v-else-if="error && searchResults.length === 0"
+        class="no-results"
+        role="alert"
+      >
+        <h3>Search unavailable</h3>
+        <p>{{ error }}</p>
+        <button
+          class="load-more-btn"
+          @click="performSearch"
+        >
+          Try again
+        </button>
+      </div>
+
       <!-- No Results -->
       <div
         v-else-if="
@@ -86,6 +107,13 @@
           :recipe="recipe"
         />
       </div>
+
+      <p
+        v-if="error && searchResults.length > 0"
+        role="alert"
+      >
+        {{ error }}
+      </p>
 
       <div
         v-if="(searchQuery || hasActiveFilters) && hasMorePublicResults && !isSearching"
@@ -189,6 +217,8 @@ export default {
       "hasActiveFilters",
       "isSearching",
       "hasMorePublicResults",
+      "error",
+      "filters",
     ]),
     ...mapGetters("recipes", ["allRecipes"]),
 
@@ -213,11 +243,10 @@ export default {
     }
   },
   methods: {
-    ...mapActions("search", ["clearSearch", "clearFilters", "performSearch", "loadMorePublicResults"]),
+    ...mapActions("search", ["resetSearch", "performSearch", "loadMorePublicResults"]),
 
     clearAllSearch() {
-      this.clearFilters();
-      this.clearSearch();
+      this.resetSearch();
     },
 
     loadMoreRecipes() {

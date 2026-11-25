@@ -82,16 +82,23 @@ const actions = {
     const searchId = ++latestSearchId;
     const query = state.searchQuery.trim();
     const cuisine = state.filters.cuisine;
+    const maxCookTime = state.filters.maxCookTime;
+    const includeCommunity = !state.filters.dietary && !state.filters.difficulty;
     commit("SET_IS_SEARCHING", true);
     commit("CLEAR_ERROR");
 
     try {
       let searchResults = [];
-      const publicRequest = (query
-        ? recipeService.searchPublicRecipes(query, { pageSize: PUBLIC_PAGE_SIZE })
-        : recipeService.getPublicRecipes({ pageSize: PUBLIC_PAGE_SIZE })
+      let publicError = false;
+      const publicOptions = { pageSize: PUBLIC_PAGE_SIZE, cuisine, maxCookTime };
+      const publicRequest = (includeCommunity
+        ? query
+          ? recipeService.searchPublicRecipes(query, publicOptions)
+          : recipeService.getPublicRecipes(publicOptions)
+        : Promise.resolve([])
       ).catch((error) => {
         console.warn("Could not load user recipes for search:", error);
+        publicError = true;
         return [];
       });
 
@@ -103,7 +110,8 @@ const actions = {
         // If no text query but filters are applied, get recipes by category/area
         if (cuisine) {
           const rawMeals = await mealService.getMealsByArea(cuisine);
-          searchResults = transformMealsData(rawMeals);
+          // The area filter endpoint returns summary rows without strArea.
+          searchResults = transformMealsData(rawMeals).map((recipe) => ({ ...recipe, cuisine }));
         } else {
           // No search query and no cuisine filter - get cached recipes from store
           searchResults = rootGetters["recipes/allRecipes"];
@@ -120,9 +128,10 @@ const actions = {
       }
 
       if (searchId === latestSearchId) {
+        if (publicError) commit("SET_ERROR", "Community recipes could not be loaded. Showing available results.");
         commit("SET_SEARCH_RESULTS", searchResults);
         commit("SET_PUBLIC_PAGE", 0);
-        commit("SET_HAS_MORE_PUBLIC_RESULTS", userRecipes.length === PUBLIC_PAGE_SIZE);
+        commit("SET_HAS_MORE_PUBLIC_RESULTS", includeCommunity && userRecipes.length === PUBLIC_PAGE_SIZE);
       }
     } catch (error) {
       if (searchId === latestSearchId) {
@@ -137,15 +146,16 @@ const actions = {
   },
 
   async loadMorePublicResults({ commit, state }) {
-    if (state.isSearching || !state.hasMorePublicResults) return [];
+    if (state.isSearching || !state.hasMorePublicResults || state.filters.dietary || state.filters.difficulty) return [];
     const searchId = latestSearchId;
     const query = state.searchQuery.trim();
+    const { cuisine, maxCookTime } = state.filters;
     const nextPage = state.publicPage + 1;
     commit("SET_IS_SEARCHING", true);
     try {
       const rows = query
-        ? await recipeService.searchPublicRecipes(query, { page: nextPage, pageSize: PUBLIC_PAGE_SIZE })
-        : await recipeService.getPublicRecipes({ page: nextPage, pageSize: PUBLIC_PAGE_SIZE });
+        ? await recipeService.searchPublicRecipes(query, { page: nextPage, pageSize: PUBLIC_PAGE_SIZE, cuisine, maxCookTime })
+        : await recipeService.getPublicRecipes({ page: nextPage, pageSize: PUBLIC_PAGE_SIZE, cuisine, maxCookTime });
       if (searchId !== latestSearchId) return [];
       const existingIds = new Set(state.searchResults.map((recipe) => recipe.id));
       const toAdd = rows.map(transformUserRecipeForSearch).filter((recipe) => !existingIds.has(recipe.id));
@@ -187,7 +197,7 @@ const actions = {
 
     try {
       const rawMeals = await mealService.getMealsByArea(cuisine);
-      const transformedRecipes = transformMealsData(rawMeals);
+      const transformedRecipes = transformMealsData(rawMeals).map((recipe) => ({ ...recipe, cuisine }));
       commit("SET_SEARCH_RESULTS", transformedRecipes);
       commit("SET_FILTER", { filterType: "cuisine", value: cuisine });
       return transformedRecipes;
@@ -202,8 +212,10 @@ const actions = {
   },
 
   updateFilter({ commit, dispatch, state }, { filterType, value }) {
-    const sourceChanged = filterType === "cuisine" && state.filters.cuisine !== value;
+    const sourceChanged = ["cuisine", "maxCookTime"].includes(filterType) && state.filters[filterType] !== value;
+    const communityWasExcluded = !!state.filters.dietary || !!state.filters.difficulty;
     commit("SET_FILTER", { filterType, value });
+    const communityIsExcluded = !!state.filters.dietary || !!state.filters.difficulty;
     const hasFilters = Object.values(state.filters).some((filter) => filter !== "" && filter !== null);
     if (!state.searchQuery.trim() && !hasFilters) {
       ++latestSearchId;
@@ -211,19 +223,31 @@ const actions = {
       commit("SET_IS_SEARCHING", false);
       return;
     }
-    if ((!state.searchQuery.trim() && sourceChanged) || !state.hasLoadedResults) {
+    if (sourceChanged || (communityWasExcluded && !communityIsExcluded) || !state.hasLoadedResults) {
       return dispatch("performSearch");
     }
   },
 
-  clearFilters({ commit, state }) {
-    const hadCuisine = !!state.filters.cuisine;
+  clearFilters({ commit, dispatch, state }) {
+    const hadSourceFilter = !!state.filters.cuisine || state.filters.maxCookTime != null;
     commit("CLEAR_FILTERS");
-    if (hadCuisine && !state.searchQuery.trim()) {
+    if (hadSourceFilter && state.searchQuery.trim()) {
+      return dispatch("performSearch");
+    }
+    if (hadSourceFilter && !state.searchQuery.trim()) {
       ++latestSearchId;
       commit("RESET_SEARCH_RESULTS");
       commit("SET_IS_SEARCHING", false);
     }
+  },
+
+  resetSearch({ commit }) {
+    ++latestSearchId;
+    commit("SET_SEARCH_QUERY", "");
+    commit("CLEAR_FILTERS");
+    commit("RESET_SEARCH_RESULTS");
+    commit("SET_IS_SEARCHING", false);
+    commit("CLEAR_ERROR");
   },
 
   clearSearch({ commit, dispatch, state }) {
@@ -247,15 +271,15 @@ const getters = {
   searchResults: (state) => {
     const { cuisine, dietary, difficulty, maxCookTime } = state.filters;
     return state.searchResults.filter((recipe) =>
-      (!cuisine || state.searchQuery.trim() || !recipe.isUserRecipe || recipe.cuisine === cuisine) &&
+      (!cuisine || recipe.cuisine?.toLowerCase() === cuisine.toLowerCase()) &&
       (!dietary || recipe.dietary?.some((tag) => tag.toLowerCase() === dietary.toLowerCase())) &&
       (!difficulty || recipe.difficulty?.toLowerCase() === difficulty.toLowerCase()) &&
-      (!maxCookTime || recipe.cookTime <= maxCookTime)
+      (!maxCookTime || (recipe.cookTime != null && recipe.cookTime <= maxCookTime))
     );
   },
   filters: (state) => state.filters,
   isSearching: (state) => state.isSearching,
-  hasMorePublicResults: (state) => state.hasMorePublicResults,
+  hasMorePublicResults: (state) => state.hasMorePublicResults && !state.filters.dietary && !state.filters.difficulty,
   error: (state) => state.error,
   hasActiveFilters: (state) => {
     return Object.values(state.filters).some(

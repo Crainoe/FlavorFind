@@ -27,9 +27,7 @@ export function transformUserRecipe(row, { includeDetails = true } = {}) {
 export function transformUserRecipeForSearch(row) {
   return {
     ...transformUserRecipe(row, { includeDetails: false }),
-    cookTime: row.cook_time || 30,
-    servings: row.servings || 2,
-    difficulty: "Medium",
+    difficulty: null,
     dietary: [],
   };
 }

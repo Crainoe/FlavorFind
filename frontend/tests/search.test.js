@@ -29,7 +29,7 @@ describe("search requests and filters", () => {
     recipeService.getPublicRecipes.mockResolvedValue([]);
   });
 
-  it("applies local filters without repeating network searches", async () => {
+  it("keeps dietary filters local and refreshes meal results for time changes", async () => {
     const context = harness();
     context.commit("SET_SEARCH_QUERY", "curry");
     mealService.searchMeals.mockResolvedValue([{
@@ -43,7 +43,7 @@ describe("search requests and filters", () => {
     await searchModule.actions.updateFilter(context, { filterType: "dietary", value: "Vegetarian" });
     await searchModule.actions.updateFilter(context, { filterType: "maxCookTime", value: 30 });
 
-    expect(mealService.searchMeals).toHaveBeenCalledTimes(1);
+    expect(mealService.searchMeals).toHaveBeenCalledTimes(2);
     expect(recipeService.searchPublicRecipes).toHaveBeenCalledTimes(1);
     expect(searchModule.getters.searchResults(context.state)).toHaveLength(1);
 
@@ -67,5 +67,48 @@ describe("search requests and filters", () => {
 
     expect(context.state.searchResults.map((recipe) => recipe.id)).toEqual(["2"]);
     expect(context.state.isSearching).toBe(false);
+  });
+
+  it("applies cuisine to meal results and community queries", async () => {
+    const context = harness();
+    context.commit("SET_SEARCH_QUERY", "pasta");
+    context.commit("SET_FILTER", { filterType: "cuisine", value: "Italian" });
+    mealService.searchMeals.mockResolvedValue([
+      { idMeal: "1", strMeal: "Pasta", strArea: "Italian" },
+      { idMeal: "2", strMeal: "Pasta", strArea: "American" },
+    ]);
+
+    await searchModule.actions.performSearch(context);
+
+    expect(searchModule.getters.searchResults(context.state).map((recipe) => recipe.id)).toEqual(["1"]);
+    expect(recipeService.searchPublicRecipes).toHaveBeenCalledWith("pasta", {
+      pageSize: 24,
+      cuisine: "Italian",
+      maxCookTime: null,
+    });
+  });
+
+  it("passes cook time to the community query before pagination", async () => {
+    const context = harness();
+    context.commit("SET_SEARCH_QUERY", "soup");
+    mealService.searchMeals.mockResolvedValue([]);
+
+    await searchModule.actions.updateFilter(context, { filterType: "maxCookTime", value: 15 });
+
+    expect(recipeService.searchPublicRecipes).toHaveBeenCalledWith("soup", {
+      pageSize: 24,
+      cuisine: "",
+      maxCookTime: 15,
+    });
+  });
+
+  it("keeps cuisine results when the area endpoint omits strArea", async () => {
+    const context = harness();
+    context.commit("SET_FILTER", { filterType: "cuisine", value: "Italian" });
+    mealService.getMealsByArea.mockResolvedValue([{ idMeal: "1", strMeal: "Pasta" }]);
+
+    await searchModule.actions.performSearch(context);
+
+    expect(searchModule.getters.searchResults(context.state).map((recipe) => recipe.id)).toEqual(["1"]);
   });
 });

@@ -106,12 +106,15 @@ class RecipeService {
     }
   }
 
-  async getPublicRecipes({ page = 0, pageSize = 24 } = {}) {
+  async getPublicRecipes({ page = 0, pageSize = 24, cuisine = "", maxCookTime = null } = {}) {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("recipes")
         .select("id,user_id,title,description,cuisine,category,cook_time,servings,image_url,is_public,created_at")
-        .eq("is_public", true)
+        .eq("is_public", true);
+      if (cuisine) query = query.ilike("cuisine", cuisine);
+      if (maxCookTime != null) query = query.lte("cook_time", maxCookTime);
+      const { data, error } = await query
         .order("created_at", { ascending: false })
         .order("id", { ascending: true })
         .range(page * pageSize, (page + 1) * pageSize - 1);
@@ -124,15 +127,18 @@ class RecipeService {
     }
   }
 
-  async searchPublicRecipes(query, { page = 0, pageSize = 24 } = {}) {
+  async searchPublicRecipes(query, { page = 0, pageSize = 24, cuisine = "", maxCookTime = null } = {}) {
     try {
-      const { data, error } = await supabase
+      let request = supabase
         .from("recipes")
         .select("id,user_id,title,description,cuisine,category,cook_time,servings,image_url,is_public,created_at")
         .eq("is_public", true)
         .or(
           `title.ilike.%${query}%,description.ilike.%${query}%,cuisine.ilike.%${query}%`
-        )
+        );
+      if (cuisine) request = request.ilike("cuisine", cuisine);
+      if (maxCookTime != null) request = request.lte("cook_time", maxCookTime);
+      const { data, error } = await request
         .order("created_at", { ascending: false })
         .order("id", { ascending: true })
         .range(page * pageSize, (page + 1) * pageSize - 1);

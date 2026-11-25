@@ -6,6 +6,7 @@ const state = {
   loading: false,
   error: null,
 };
+let favoritesVersion = 0;
 
 const mutations = {
   SET_FAVORITES(state, favorites) {
@@ -41,7 +42,13 @@ const mutations = {
 };
 
 const actions = {
+  resetFavorites({ commit }) {
+    ++favoritesVersion;
+    commit("CLEAR_FAVORITES");
+    commit("SET_ERROR", null);
+  },
   async loadFavorites({ commit, rootGetters }) {
+    const version = favoritesVersion;
     try {
       commit("SET_LOADING", true);
       commit("SET_ERROR", null);
@@ -63,8 +70,11 @@ const actions = {
       }
 
       const favorites = await favoritesService.getFavorites(user.id);
-      commit("SET_FAVORITES", favorites);
+      if (version === favoritesVersion && rootGetters["auth/user"]?.id === user.id) {
+        commit("SET_FAVORITES", favorites);
+      }
     } catch (error) {
+      if (version !== favoritesVersion) return;
       console.error("Error loading favorites:", error);
       commit("SET_ERROR", error.message);
       // Fallback to localStorage
@@ -192,6 +202,7 @@ const actions = {
 
   // Migration helper - move localStorage data to Supabase when user logs in
   async migrateFavoritesToSupabase({ commit, rootGetters }) {
+    const version = favoritesVersion;
     try {
       const user = rootGetters["auth/user"];
       if (!user) return;
@@ -227,8 +238,11 @@ const actions = {
 
       // Reload favorites from Supabase
       const favorites = await favoritesService.getFavorites(user.id);
-      commit("SET_FAVORITES", favorites);
+      if (version === favoritesVersion && rootGetters["auth/user"]?.id === user.id) {
+        commit("SET_FAVORITES", favorites);
+      }
     } catch (error) {
+      if (version !== favoritesVersion) return;
       console.error("Error migrating favorites:", error);
       commit("SET_ERROR", error.message);
     } finally {

@@ -101,7 +101,7 @@ GRANT ALL ON public.favorites TO authenticated;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 
 -- Optional: Create a view for favorite recipes with counts
-CREATE OR REPLACE VIEW user_favorite_stats AS
+CREATE OR REPLACE VIEW user_favorite_stats WITH (security_invoker = true) AS
 SELECT 
     user_id,
     COUNT(*) as total_favorites,
@@ -109,6 +109,7 @@ SELECT
     MIN(created_at) as first_favorite,
     MAX(created_at) as last_favorite
 FROM public.favorites
+WHERE user_id = auth.uid()
 GROUP BY user_id;
 
 -- Grant access to the view

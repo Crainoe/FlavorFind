@@ -5,7 +5,7 @@ import {
 } from "../src/utils/userRecipeTransform.js";
 
 describe("user recipe transformations", () => {
-  it("keeps stored values in recipe views and adds search defaults only for search", () => {
+  it("keeps stored values and does not invent missing search metadata", () => {
     const row = {
       id: "recipe-1",
       title: "Soup",
@@ -28,9 +28,9 @@ describe("user recipe transformations", () => {
     });
     expect(transformUserRecipeForSearch(row)).toMatchObject({
       id: "recipe-1",
-      cookTime: 30,
-      servings: 2,
-      difficulty: "Medium",
+      cookTime: null,
+      servings: null,
+      difficulty: null,
       dietary: [],
     });
     expect(transformUserRecipeForSearch(row)).not.toHaveProperty("ingredients");
